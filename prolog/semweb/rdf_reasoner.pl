@@ -1,7 +1,7 @@
 :- module(
   rdf_reasoner,
   [
-    rdf_prove_/1, % ?Conclusion
+    rdf_prove/1, % ?Conclusion
     rdf_prove/2   % ?Conclusion, -Proof
   ]
 ).
@@ -25,24 +25,24 @@
 
 :- rdf_meta
    axiom(?, t),
-   rdf_prove_(t),
+   rdf_prove(t),
    rdf_prove(t, -),
    recognized_datatype_iri(r),
    rule(?, t, t).
 
 :- table
-   rdf_prove_/1,
+   rdf_prove/1,
    rdf_prove(_,lattice(shortest_proof)).
 
 
 
-%! rdf_prove_(++Conclusion:compound) is semidet.
-%! rdf_prove_(+Conclusion:compound) is nondet.
-%! rdf_prove_(-Conclusion:compound) is multi.
+%! rdf_prove(++Conclusion:compound) is semidet.
+%! rdf_prove(+Conclusion:compound) is nondet.
+%! rdf_prove(-Conclusion:compound) is multi.
 
-rdf_prove_(Concl) :-
+rdf_prove(Concl) :-
   rule(_, Concl, Prems),
-  maplist(rdf_prove_, Prems).
+  maplist(rdf_prove, Prems).
 
 
 
