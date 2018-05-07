@@ -1,0 +1,8 @@
+#+TITLE: RDF-Reasoner
+#+AUTHOR: Wouter Beek
+
+* Installation
+
+  1. Install [[SWI-Prolog][http://www.swi-prolog.org]]
+  2. Clone this repository: ~git clone https://github.com/wouterbeek/RDF-Reasoner~
+  3. Run the reasoner: ~cd RDF-Reasoner/prolog/semweb ; swipl rdf_reasoner.pl~
