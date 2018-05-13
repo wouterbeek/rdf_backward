@@ -10,29 +10,42 @@ standard tabling and Semantic Web libraries.  The implementation tries
 to strictly adhere to the [[https://www.w3.org/TR/rdf11-mt/][RDF 1.1 Semantics Recommendation
 (2014-02-25)]].
 
+Please [[https://github.com/wouterbeek/RDF-Reasoner/issues][open a Github issue]] if you found a bug, have a suggestion, or
+just want to say hi.
+
 * Installation
 
-  1. Install [[http://www.swi-prolog.org][SWI-Prolog]].
+  1. Install [[http://www.swi-prolog.org][SWI-Prolog]], an awesome logic programming language with
+     exquisite Semantic Web support.
 
-  2. Clone this repository: ~git clone
-     https://github.com/wouterbeek/RDF-Reasoner~
+  2. Clone (and star!) this repository:
 
-  3. Optionally, in case you want to see visualizations of proof tree,
-     install [[http://www.graphviz.org/][GraphViz]]:
+     #+BEGIN_SRC sh
+     git clone https://github.com/wouterbeek/RDF-Reasoner
+     #+END_SRC
 
-     - On Red Hat-based distro's (e.g., Fedora): ~sudo dnf install
-       graphviz~
+  3. Optionally, in case you want to see visualizations of proof tree
+     (and who does not?), install [[http://www.graphviz.org/][GraphViz]]:
 
-     - On Debian-based distro's (e.g., Ubuntu): ~sudo apt install
-       graphviz~
+     - On Red Hat-based distro's (e.g., Fedora):
+
+       #+BEGIN_SRC sh
+       sudo dnf install graphviz
+       #+END_SRC
+
+     - On Debian-based distro's (e.g., Ubuntu):
+
+       #+BEGIN_SRC sh
+       sudo apt install graphviz
+       #+END_SRC
 
 * Example use
 
 ** Start the reasoner
 
 #+BEGIN_SRC sh
-$ cd RDF-Reasoner/prolog/semweb
-$ swipl rdf_reasoner.pl
+cd RDF-Reasoner/prolog/semweb
+swipl rdf_reasoner.pl
 #+END_SRC
 
 ** Check whether a specific statement can be proven
@@ -44,11 +57,16 @@ true.
 
 ** Obtain a proof tree for a specific statement
 
-This requires GraphViz to be installed.
+It's great that this statement can be proven, but I would like to see
+a particular proof:
 
 #+BEGIN_SRC prolog
 ?- prove_tree(rdf(rdfs:'Class',rdf:type,rdfs:'Class').
 #+END_SRC
+
+This displays the following proof tree:
+
+[[./doc/img/class.svg]]
 
 ** Non-empty setup stage & non-ground goal
 
@@ -162,7 +180,7 @@ composed from the sub-atomic terms defined above:
 
     - *Typed literals* ($TL$) <<typed literal>>
 
-      Defined as $((D \setminus \{\texttt{rdf:langString\}) \times
+      Defined as $((D \setminus \{\texttt{rdf:langString}\}) \times
       Lex) \cup LTS$
 
     - *Language-tagged strings* ($LTS$) <<language-tagged string>>
@@ -287,12 +305,15 @@ grammar:
     - *Typed literal*
 
       Represented by a Prolog compound term of the form
-      ~literal(type(atom,atom))~.
+      ~^^(term,atom)~.
 
     - *Language-tagged string*
 
       Represented by a Prolog compound term of the form
-      ~literal(lang(atom,atom))~.
+      ~@(string,atom)~.
+
+The operators ~^^/2~ and ~@/2~ can be used in infix notation, to mimic
+the Turtle syntax somewhat: ~""^^xsd:string~, ~"Hello, world!"@en-gb~.
 
 ** Atomic statements
 
