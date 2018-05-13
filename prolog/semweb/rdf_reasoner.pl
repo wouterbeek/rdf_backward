@@ -17,7 +17,10 @@
 :- use_module(library(semweb/rdf11)).
 :- use_module(library(semweb/rdf11_containers)).
 
+:- [rdf_prefix].
+
 :- initialization
+   init_rdf_prefixes,
    rdf_reasoner_init.
 
 :- dynamic
