@@ -1,9 +1,9 @@
 :- module(
   rdf_proof_export,
   [
-    open_pdf/1,         % +File
-    rdf_proof_export/2, % +File, +Proof
-    rdf_proof_view/1    % +Proof
+    export_proof/2, % +File, +Proof
+    view_pdf/1,     % +File
+    view_proof/1    % +Proof
   ]
 ).
 
@@ -38,16 +38,9 @@ In order to display the export output, run `?- debug(gv).'
 
 
 
-%! open_pdf(+File:atom) is det.
+%! export_proof(+File:atom, +Proof:compound) is det.
 
-open_pdf(File) :-
-  process_create(path(evince), [file(File)], []).
-
-
-
-%! rdf_proof_export(+File:atom, +Proof:compound) is det.
-
-rdf_proof_export(File, Tree) :-
+export_proof(File, Tree) :-
   setup_call_cleanup(
     open(File, write, Out, [type(binary)]),
     setup_call_cleanup(
@@ -69,25 +62,32 @@ rdf_proof_export(File, Tree) :-
 
 
 
-%! rdf_proof_view(+Proof:compound) is det.
+%! view_pdf(+File:atom) is det.
 
-rdf_proof_view(Tree) :-
+view_pdf(File) :-
+  process_create(path(evince), [file(File)], []).
+
+
+
+%! view_proof(+Proof:compound) is det.
+
+view_proof(Tree) :-
   setup_call_cleanup(
     process_create(path(dot), ['-Tgtk'], [stdin(pipe(ProcIn))]),
     export_proof_stream(ProcIn, Tree),
     close(ProcIn)
   ).
 
-export_proof_stream(Out, Tree) :-
-  format_debug(gv, Out, "digraph g {", []),
-  export_tree(Out, Tree),
-  format_debug(gv, Out, "}", []).
-
 
 
 
 
 % GENERICS %
+
+export_proof_stream(Out, Tree) :-
+  format_debug(gv, Out, "digraph g {", []),
+  export_tree(Out, Tree),
+  format_debug(gv, Out, "}", []).
 
 export_tree(Out, t(Rule,Concl,Prems)) :-
   gv_node_id(Concl, X),

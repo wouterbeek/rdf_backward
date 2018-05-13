@@ -1,6 +1,6 @@
 :- module(rdf_prefix, [init_rdf_prefixes/0]).
 
-:- use_module(library(semweb/rdf_db)).
+:- use_module(library(semweb/rdf11)).
 
 init_rdf_prefixes :-
   forall(
@@ -8,8 +8,6 @@ init_rdf_prefixes :-
     rdf_register_prefix(Alias, Prefix)
   ).
 
-prefix_(Alias, Prefix) :-
-  rdf_db:ns(Alias, Prefix).
 prefix_(bag, 'http://bag.basisregistraties.overheid.nl/def/bag#').
 prefix_(bibframe, 'http://id.loc.gov/ontologies/bibframe/').
 prefix_(bibo, 'http://purl.org/ontology/bibo/').

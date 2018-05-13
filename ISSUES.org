@@ -1,0 +1,27 @@
+#+TITLE: Issues
+#+AUTHOR: Wouter Beek
+
+* SWI-Prolog
+** Can ~library(debug)~ be called from within a tabled predicate?
+#+BEGIN_SRC prolog
+:- use_module(library(debug)).
+:- debug(rdf_reasoning).
+(   debugging(rdf_reasoner)
+->  maplist([Concl,Tree]>>(Tree=t(premise,Concl,[])), Prems, Trees),
+    with_output_to(string(Str), rdf_proof_print(t(Rule,Concl,Trees))),
+    debug(rdf_reasoner, "~s", [Str])
+;   true
+)
+#+END_SRC
+* RDF 1.1 Semantics
+** D is not needed for rule rdfD2
+Rule rdfD2 is named after the set of recognized datatype IRIs ($D$).
+However, $D$ is never used in this rule.
+** How does the ~xsd:boolean~ entailment work?
+#+BEGIN_SRC ttl
+ex:a ex:p "true"^^xsd:boolean  .
+ex:a ex:p "false"^^xsd:boolean .
+ex:v a    xsd:boolean          .
+# ------------------------------
+ex:a ex:p ex:v                 .
+#+END_SRC
