@@ -1,5 +1,7 @@
 #+TITLE: RDF-Reasoner
 #+AUTHOR: Wouter Beek
+#+STARTUP: inlineimages
+#+STARTUP: latexpreview
 
 This library implements a backward chaining reasoner for RDF(S).  It
 uses mode-directed tabling in order to effectively determine whether a
