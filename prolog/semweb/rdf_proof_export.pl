@@ -29,6 +29,7 @@ In order to display the export output, run `?- debug(gv).'
 */
 
 :- use_module(library(debug)).
+:- use_module(library(error)).
 :- use_module(library(md5)).
 :- use_module(library(process)).
 
@@ -41,12 +42,18 @@ In order to display the export output, run `?- debug(gv).'
 %! export_proof(+File:atom, +Proof:compound) is det.
 
 export_proof(File, Tree) :-
+  must_be(atom, File),
+  determine_format(File, Format, Type),
   setup_call_cleanup(
-    open(File, write, Out, [type(binary)]),
+    open(File, write, Out, [type(Type)]),
     setup_call_cleanup(
       (
-        process_create(path(dot), ['-Tpdf'], [stdin(pipe(ProcIn)),stdout(pipe(ProcOut))]),
-        set_stream(ProcOut, type(binary))
+        process_create(
+          path(dot),
+          ['-T',Format],
+          [stdin(pipe(ProcIn)),stdout(pipe(ProcOut))]
+        ),
+        set_stream(ProcOut, type(Type))
       ),
       (
         call_cleanup(
@@ -59,6 +66,14 @@ export_proof(File, Tree) :-
     ),
     close(Out)
   ).
+
+determine_format(File, Format, Type) :-
+  file_name_extension(_, Format, File),
+  format_type(Format, Type), !.
+determine_format(_, pdf, binary).
+
+format_type(pdf, binary).
+format_type(svg, text).
 
 
 
