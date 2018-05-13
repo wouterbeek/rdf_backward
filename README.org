@@ -4,5 +4,33 @@
 * Installation
 
   1. Install [[SWI-Prolog][http://www.swi-prolog.org]]
-  2. Clone this repository: ~git clone https://github.com/wouterbeek/RDF-Reasoner~
-  3. Run the reasoner: ~cd RDF-Reasoner/prolog/semweb ; swipl rdf_reasoner.pl~
+  2. Clone this repository: ~git clone
+     https://github.com/wouterbeek/RDF-Reasoner~
+  3. Optionally install GraphViz (~sudo apt install graphviz~ or ~sudo
+     dnf install graphviz~).
+
+* Example use
+
+** Start the reasoner
+
+#+BEGIN_SRC sh
+cd RDF-Reasoner/prolog/semweb
+swipl rdf_reasoner.pl
+#+END_SRC
+
+** Check whether a specific statement can be proven
+
+#+BEGIN_SRC prolog
+?- prove(rdf(rdfs:'Class',rdf:type,rdfs:'Class')).
+true.
+#+END_SRC
+
+** Obtain a proof tree for a specific statement
+
+This requires GraphViz to be installed.
+
+#+BEGIN_SRC prolog
+?- [rdf_proof_export].
+?- prove(rdf(rdfs:'Class',rdf:type,rdfs:'Class'), Proof),
+   rdf_proof_export(Proof).
+#+END_SRC
