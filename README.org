@@ -1,30 +1,38 @@
 #+TITLE: RDF-Reasoner
 #+AUTHOR: Wouter Beek
 
-This library implements a backward reasoner for RDF and RDFS.  It uses
-mode-directed tabling in order to effectively determine whether a
-given atomic ground fact is true or not, as well as an iterative
-procedure for finding all the substitutions that turn a non-ground
-atomic fact into ground variant.  This is implemented in SWI-Prolog,
-using SWI's standard tabling and Semantic Web libraries.  The
-implementation tries to strictly adhere to the [[https://www.w3.org/TR/rdf11-mt/][RDF 1.1 Semantics W3C
-Reccomnetation (2014-02-25)]].
+This library implements a backward chaining reasoner for RDF(S).  It
+uses mode-directed tabling in order to effectively determine whether a
+given atomic ground fact is true or not.  It is also able to enumerate
+all and only variables bindings that make a given non-ground fact
+true.  This library is implemented in SWI-Prolog, and uses SWI's
+standard tabling and Semantic Web libraries.  The implementation tries
+to strictly adhere to the [[https://www.w3.org/TR/rdf11-mt/][RDF 1.1 Semantics Recommendation
+(2014-02-25)]].
 
 * Installation
 
   1. Install [[http://www.swi-prolog.org][SWI-Prolog]].
+
   2. Clone this repository: ~git clone
      https://github.com/wouterbeek/RDF-Reasoner~
-  3. Optionally install GraphViz (~sudo apt install graphviz~ or ~sudo
-     dnf install graphviz~).
+
+  3. Optionally, in case you want to see visualizations of proof tree,
+     install [[http://www.graphviz.org/][GraphViz]]:
+
+     - On Red Hat-based distro's (e.g., Fedora): ~sudo dnf install
+       graphviz~
+
+     - On Debian-based distro's (e.g., Ubuntu): ~sudo apt install
+       graphviz~
 
 * Example use
 
 ** Start the reasoner
 
 #+BEGIN_SRC sh
-cd RDF-Reasoner/prolog/semweb
-swipl rdf_reasoner.pl
+$ cd RDF-Reasoner/prolog/semweb
+$ swipl rdf_reasoner.pl
 #+END_SRC
 
 ** Check whether a specific statement can be proven
@@ -39,12 +47,61 @@ true.
 This requires GraphViz to be installed.
 
 #+BEGIN_SRC prolog
-?- [rdf_proof_export].
-?- prove(rdf(rdfs:'Class',rdf:type,rdfs:'Class'), Proof),
-   rdf_proof_view(Proof).
+?- prove_tree(rdf(rdfs:'Class',rdf:type,rdfs:'Class').
 #+END_SRC
 
-* Preliminaties
+** Non-empty setup stage & non-ground goal
+
+The above examples have performed reasoning over the standard set of
+RDF(S) axioms, recognized datatype IRIs, rules, and database
+statements.  In the next example, we want to add an extra statement to
+the database prior to performing the reasoning task.
+
+In earlier examples we have asked whether a given ground statement
+could be proven.  Here we ask whether a non-ground statement can be
+proven.  The fact that the conclusion is non-ground is indicated by
+the Prolog variables ~P~ and ~O~.  We are looking for bindings to
+these two variables that would result in a provable ground statement.
+
+#+BEGIN_SRC prolog
+?- add_statement(rdf(rdf:s,rdf:p,""^^xsd:string)).
+?- prove_tree(rdf(""^^xsd:string,P,O)).
+P = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+O = 'http://www.w3.org/2000/01/rdf-schema#Resource' ;
+#+END_SRC
+
+The bindings for ~P~ and ~O~ that are printed at the top-level result
+in a provable ground statement.  In addition, the following proof tree
+is shown:
+
+[[./doc/img/string-1.svg]]
+
+By pressing the semicolon key (~;~) at the Prolog top level, we ask
+Prolog to search for an alternative binding of the variables ~P~ and
+~O~:
+
+#+BEGIN_SRC prolog
+P = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+O = 'http://www.w3.org/2001/XMLSchema#string' ;
+#+END_SRC
+
+[[./doc/img/string-2.svg]]
+
+And by pressing the semicolon a second time, we get the third
+solution:
+
+#+BEGIN_SRC prolog
+P = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+O = 'http://www.w3.org/2000/01/rdf-schema#Literal'.
+#+END_SRC
+
+[[./doc/img/string-3.svg]]
+
+There are no more solutions, and it is not possible to press the
+semicolon a third time.  At the top level, this is indicated by the
+dot (~.~) character.
+
+* Preliminaries
 
 This section introduces some simple notation that is used in
 subsequent sections.
@@ -105,12 +162,12 @@ composed from the sub-atomic terms defined above:
 
     - *Typed literals* ($TL$) <<typed literal>>
 
-      Defined as $((D \setminus \{\textt{rdf:langString\}) \times
+      Defined as $((D \setminus \{\texttt{rdf:langString\}) \times
       Lex) \cup LTS$
 
     - *Language-tagged strings* ($LTS$) <<language-tagged string>>
       
-      Defined as $\{\textt{rdf:langString}\} \times Lex \times LT$
+      Defined as $\{\texttt{rdf:langString}\} \times Lex \times LT$
 
 These three types of syntactic terms are pairwise disjoint
 [KlyneCarroll2004].
@@ -328,14 +385,14 @@ datatype IRIs can be extended with the dynamic Prolog predicate
 
 Once $D$ has be determined, the following RDF rule is in effect:
 
-| *Rule name* | *Premises*    | *Conclusion*        |
-|-------------+---------------+---------------------|
-| <<rdfD1>>   | ~?s ?p ?o .~  | ~?o a ?d .~         |
-|             | $?o \in L$    |                     |
-|             | $d(?o) \in D$ |                     |
-|-------------+---------------+---------------------|
-| <<rdfD2>>   | ~?s ?p ?o .~  | ~?p a rdf:Property~ |
-|-------------+---------------+---------------------|
+| *Rule name*     | *Premises*    | *Conclusion*        |
+|-----------------+---------------+---------------------|
+| rdfD1 <<rdfD1>> | ~?s ?p ?o .~  | ~?o a ?d .~         |
+|                 | $?o \in L$    |                     |
+|                 | $d(?o) \in D$ |                     |
+|-----------------+---------------+---------------------|
+| rdfD2 <<rdfD2>> | ~?s ?p ?o .~  | ~?p a rdf:Property~ |
+|-----------------+---------------+---------------------|
 
 For example, rule [[rdfD1]] allows the following entailment to be derived
 from the example graph:
@@ -405,39 +462,39 @@ properties are present in the database.
 
 ** Rules
 
-| *Rule name* | *Premises*                                | *Conclusion*                          |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs1>>   | $?d \in D$                                | ~?d a rdfs:Datatype .~                |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs2>>   | ~?p rdfs:domain ?c .~                     | ~?s a ?c .~                           |
-|             | ~s ?p ?o .~                               |                                       |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs3>>   | ~?p rdfs:range ?c .~                      | ~?o a ?c .~                           |
-|             | ~?s ?p ?o .~                              |                                       |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs4a>>  | ~?s ?p ?o .~                              | ~?s a rdfs:Resource .~                |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs4b>>  | ~?s ?p ?o .~                              | ~?o a rdfs:Resource .~                |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs5>>   | ~?p rdfs:subPropertyOf ?q .~              | ~?p rdfs:subPropertyOf ?r .~          |
-|             | ~?q rdfs:subPropertyOf ?r .~              |                                       |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs6>>   | ~?p a rdf:Property .~                     | ~?p rdfs:subPropertyOf ?p .~          |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs7>>   | ~?p rdfs:subPropertyOf ?q .~              | ~?s ?q ?o .~                          |
-|             | ~?s ?p ?o .~                              |                                       |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs8>>   | ~?c a rdfs:Class .~                       | ~?c rdfs:subClassOf rdfs:Resource .~  |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs9>>   | ~?c rdfs:subClassOf ?d .~                 | ~?i a ?d .~                           |
-|             | ~?i a ?c .~                               |                                       |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs10>>  | ~?c a rdfs:Class .~                       | ~?c rdfs:subClassOf ?c .~             |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs11>>  | ~?c rdfs:subClassOf ?d .~                 | ~?c rdfs:subClassOf ?e .~             |
-|             | ~?d rdfs:subClassOf ?e .~                 |                                       |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs12>>  | ~?p a rdfs:ContainerMembershipProperty .~ | ~?p rdfs:subPropertyOf rdfs:member .~ |
-|-------------+-------------------------------------------+---------------------------------------|
-| <<rdfs13>>  | ~?d a rdfs:Datatype .~                    | ~?d rdfs:subClassOf rdfs:Literal .~   |
-|-------------+-------------------------------------------+---------------------------------------|
+| *Rule name*       | *Premises*                                | *Conclusion*                          |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs1 <<rdfs1>>   | $?d \in D$                                | ~?d a rdfs:Datatype .~                |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs2 <<rdfs2>>   | ~?p rdfs:domain ?c .~                     | ~?s a ?c .~                           |
+|                   | ~s ?p ?o .~                               |                                       |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs3 <<rdfs3>>   | ~?p rdfs:range ?c .~                      | ~?o a ?c .~                           |
+|                   | ~?s ?p ?o .~                              |                                       |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs4a <<rdfs4a>> | ~?s ?p ?o .~                              | ~?s a rdfs:Resource .~                |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs4b <<rdfs4b>> | ~?s ?p ?o .~                              | ~?o a rdfs:Resource .~                |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs5 <<rdfs5>>   | ~?p rdfs:subPropertyOf ?q .~              | ~?p rdfs:subPropertyOf ?r .~          |
+|                   | ~?q rdfs:subPropertyOf ?r .~              |                                       |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs6 <<rdfs6>>   | ~?p a rdf:Property .~                     | ~?p rdfs:subPropertyOf ?p .~          |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs7 <<rdfs7>>   | ~?p rdfs:subPropertyOf ?q .~              | ~?s ?q ?o .~                          |
+|                   | ~?s ?p ?o .~                              |                                       |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs8 <<rdfs8>>   | ~?c a rdfs:Class .~                       | ~?c rdfs:subClassOf rdfs:Resource .~  |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs9 <<rdfs9>>   | ~?c rdfs:subClassOf ?d .~                 | ~?i a ?d .~                           |
+|                   | ~?i a ?c .~                               |                                       |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs10 <<rdfs10>> | ~?c a rdfs:Class .~                       | ~?c rdfs:subClassOf ?c .~             |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs11 <<rdfs11>> | ~?c rdfs:subClassOf ?d .~                 | ~?c rdfs:subClassOf ?e .~             |
+|                   | ~?d rdfs:subClassOf ?e .~                 |                                       |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs12 <<rdfs12>> | ~?p a rdfs:ContainerMembershipProperty .~ | ~?p rdfs:subPropertyOf rdfs:member .~ |
+|-------------------+-------------------------------------------+---------------------------------------|
+| rdfs13 <<rdfs13>> | ~?d a rdfs:Datatype .~                    | ~?d rdfs:subClassOf rdfs:Literal .~   |
+|-------------------+-------------------------------------------+---------------------------------------|
