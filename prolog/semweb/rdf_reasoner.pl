@@ -30,9 +30,9 @@
 :- use_module(library(semweb/rdf11_containers)).
 :- use_module(library(settings)).
 
-:- [rdf_prefix].
-:- [rdf_proof_export].
-:- [rdf_proof_print].
+:- use_module(rdf_prefix).
+:- reexport(rdf_proof_export).
+:- reexport(rdf_proof_print).
 
 :- dynamic
     axiom/2,
