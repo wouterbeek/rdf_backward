@@ -37,12 +37,15 @@
 :- dynamic
     axiom/2,
     recognized_datatype_iri/1,
-    rule/2.
+    rule/3.
 
 :- initialization
    init_rdf_prefixes.
 
 :- multifile
+    axiom/2,
+    recognized_datatype_iri/1,
+    rule/3,
     prolog:message//1.
 
 :- rdf_meta
