@@ -12,7 +12,12 @@
 */
 
 :- use_module(library(apply)).
-:- use_module(library(semweb/rdf_db)).
+:- use_module(library(semweb/rdf11)).
+
+:- rdf_meta
+   rdf_proof_print(t).
+
+
 
 
 
@@ -21,7 +26,7 @@
 rdf_proof_print(Tree) :-
   pp_tree(0, Tree).
 
-pp_tree(N1, t(Concl,Rule,Trees)) :-
+pp_tree(N1, t(Rule,Concl,Trees)) :-
   tab(N1),
   pp_rule(Rule),
   format(" "),
@@ -31,17 +36,6 @@ pp_tree(N1, t(Concl,Rule,Trees)) :-
 
 pp_rule(Rule) :-
   format("[~w]", [Rule]).
-
-pp_bindings([]) :- !.
-pp_bindings([H|T]) :-
-  pp_binding(H),
-  (T == [] -> true ; format(",")),
-  pp_bindings(T).
-
-pp_binding(X=Y) :-
-  pp_term(X),
-  format("="),
-  pp_term(Y).
 
 pp_tp(rdf(S,P,O)) :-
   pp_term(S),
@@ -53,10 +47,11 @@ pp_tp(rdf(S,P,O)) :-
 pp_term(Var) :-
   var(Var), !,
   format("~w", [Var]).
-pp_term(literal(lang(LTag,Lex))) :- !,
-  format('"~a"@~a', [Lex,LTag]).
-pp_term(literal(type(D,Lex))) :- !,
-  format('"~a"^^', [Lex]),
+pp_term(Lex@LTag) :- !,
+  format('"~s"@~a', [Lex,LTag]).
+pp_term(Value^^D) :- !,
+  rdf_lexical_form(Value^^D, Lex^^D),
+  format('"~s"^^', [Lex]),
   pp_iri(D).
 pp_term(Iri) :-
   pp_iri(Iri).

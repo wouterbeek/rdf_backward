@@ -1,1 +1,5 @@
 *~
+*.html
+*.pdf
+*.tex
+ltximg/*
