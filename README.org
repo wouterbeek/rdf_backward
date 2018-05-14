@@ -70,18 +70,57 @@ This displays the following proof tree:
 
 [[./doc/img/class.svg]]
 
-** Non-empty setup stage & non-ground goal
+** Non-empty setup stage
 
-The above examples have performed reasoning over the standard set of
-RDF(S) axioms, recognized datatype IRIs, rules, and database
-statements.  In the next example, we want to add an extra statement to
-the database prior to performing the reasoning task.
+This library distinguishing between the following two stages: setup
+and reasoning.  During the setup stage, the set of axioms, recognized
+datatype IRIs, rules, and database statements can be arbitrarily
+extended.  The setup stage is ended, and the reasoning stage is
+entered, when the first proof is invoked.
 
-In earlier examples we have asked whether a given ground statement
-could be proven.  Here we ask whether a non-ground statement can be
-proven.  The fact that the conclusion is non-ground is indicated by
-the Prolog variables ~P~ and ~O~.  We are looking for bindings to
-these two variables that would result in a provable ground statement.
+First, we add the following statements to our database, here expressed
+in Turtle:
+
+#+BEGIN_SRC ttl
+ex:happyMarriedTo rdfs:subPropertyOf _:1       .
+_:1               rdfs:domain        ex:Person .
+ex:markus         ex:happyMarriedTo  ex:anja   .
+#+END_SRC
+
+At the Prolog top-level, this is done in the following way:
+
+#+BEGIN_SRC prolog
+?- add_statement(rdf(ex:happyMarriedTo,rdfs:subPropertyOf,'_:1')).
+?- add_statement(rdf('_:1',rdfs:domain,ex:'Person')).
+?- add_statemnet(rdf(ex:markus,ex:happyMarriedTo,ex:anja)).
+#+END_SRC
+
+Now that we have extended our database, we want to prove the following
+statement expressed in Turtle:
+
+#+BEGIN_SRC ttl
+ex:markus a ex:Person .
+#+END_SRC
+
+At the Prolog top-level, this is done as follows:
+
+#+BEGIN_SRC prolog
+?- prove_tree(rdf(ex:markus,rdf:type,ex:'Person')).
+#+END_SRC
+
+[[./doc/img/markus.svg]]
+
+Notice that this is an example of a proof tree that cannot be
+expressed in terms of regular triples, and requires generalized
+triples.
+
+** Non-ground conclusions
+
+The above examples have all tried to prove a conclusion that is
+ground.  In addition, it is also possible to prove non-ground
+statements.  The fact that the conclusion is non-ground is indicated
+by the Prolog variables ~P~ and ~O~.  A solution is a binding for
+these two variables that results in a provable ground statement.
 
 #+BEGIN_SRC prolog
 ?- add_statement(rdf(rdf:s,rdf:p,""^^xsd:string)).
@@ -96,9 +135,12 @@ is shown:
 
 [[./doc/img/string-1.svg]]
 
-By pressing the semicolon key (~;~) at the Prolog top level, we ask
-Prolog to search for an alternative binding of the variables ~P~ and
-~O~:
+In this case, there are multiple solutions, i.e., multiple bindings
+for the variables ~P~ and ~O~ that result in a ground statement that
+can be proven.
+
+Such additional solutions can be requested at the Prolog top-level by
+pressing the semicolon key (~;~):
 
 #+BEGIN_SRC prolog
 P = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
@@ -142,16 +184,16 @@ define the ingredients from which RDF atomic terms are composed:
       The IRIs that denote datatypes.
 
     - *Graph names* ($G$) <<graph name>>
-      
+
       The IRIs that denote set of triples or graphs.
 
     - *Skolem IRIs* <<Skolem IRI>>
-      
+
       The IRIs that are used to systematically replace [[blank node
       label]]s.
 
     - *Unary predicates* ($C$)
-      
+
       The IRIs that denote classes.
 
     - *Binary predicates* ($P$)
@@ -159,7 +201,7 @@ define the ingredients from which RDF atomic terms are composed:
       The IRIs that denote properties.
 
   - *Language tags* ($LT$) <<language tag>>
-    
+
     The string that adhere to the grammar presented in IETF BCP 47
     [Philips2009].
 
@@ -186,7 +228,7 @@ composed from the sub-atomic terms defined above:
       Lex) \cup LTS$
 
     - *Language-tagged strings* ($LTS$) <<language-tagged string>>
-      
+
       Defined as $\{\texttt{rdf:langString}\} \times Lex \times LT$
 
 These three types of syntactic terms are pairwise disjoint
@@ -203,10 +245,10 @@ The set of RDF *ground terms* can now be defined as $GT := N \cup B$.
 
 <<variable>>
 We also posit a finite set of variable names $V$, which is distinct
-from $T$.
+from $GT$.
 
 <<term>>
-The set of RDF *terms* can now be defined as $T := GT \cup VAR$.
+The set of RDF *terms* can now be defined as $GTV := GT \cup V$.
 
 *** Serialization
 
@@ -319,18 +361,35 @@ the Turtle syntax somewhat: ~""^^xsd:string~, ~"Hello, world!"@en-gb~.
 
 ** Atomic statements
 
-We define the atomic statements or RDF *triple patterns* as $TP := T
-\times T \times T$.  Notice that this allows literals to appear in the
-subject position, allows literals and blank node labels to appear in
-the predicate position, and includes both ground and non-ground atomic
-statements.
+We define the following collections of atomic statements:
+
+  - *Ground triples* ($T$)
+
+    $(B \cup I) \times I \times GT$
+
+  - *Generalized ground triples* ($GGT$)
+
+    $GT \times GT \times GT$
+
+  - *Triple patterns* ($TP$)
+
+    $(B \cup I \cup V) \times (I \cup V) \times GTV$
+
+  - *Generalized triple patterns* ($GTP$)
+
+    $GTV \times GTV \times GTV$
+
+For historic reasons, most triple stores and all standardized RDF
+sertialization formats only support ground triples.  This is
+unfortunate, since there are correct derivations that require
+generalized triples in order to be expressed.
 
 *** Serialization
 
 #+BEGIN_SRC ttl
 predicate ::= 'a' | term
 term      ::= BLANK_NODE_LABEL | PNAME_LN | RDFLiteral | VAR1
-triple    ::= term predicate term .
+tp        ::= term predicate term
 #+END_SRC
 
 *** Implementation
@@ -417,8 +476,8 @@ Once $D$ has be determined, the following RDF rule is in effect:
 | rdfD2 <<rdfD2>> | ~?s ?p ?o .~  | ~?p a rdf:Property~ |
 |-----------------+---------------+---------------------|
 
-For example, rule [[rdfD1]] allows the following entailment to be derived
-from the example graph:
+The following generalized triple can be derived by applying rule [[rdfD1]]
+on the example graph:
 
 #+BEGIN_SRC ttl
 "Hello, world!"@en-gb a rdf:langString .
@@ -439,7 +498,7 @@ rdfs:subClassOf rdfs:domain rdfs:Class .
 rdf:subject rdfs:domain rdf:Statement .
 rdf:predicate rdfs:domain rdf:Statement .
 rdf:object rdfs:domain rdf:Statement .
-rdfs:member rdfs:domain rdfs:Resource . 
+rdfs:member rdfs:domain rdfs:Resource .
 rdf:first rdfs:domain rdf:List .
 rdf:rest rdfs:domain rdf:List .
 rdfs:seeAlso rdfs:domain rdfs:Resource .
@@ -476,7 +535,7 @@ rdfs:Datatype rdfs:subClassOf rdfs:Class .
 
 rdf:_1 a rdfs:ContainerMembershipProperty .
 rdf:_1 rdfs:domain rdfs:Resource .
-rdf:_1 rdfs:range rdfs:Resource . 
+rdf:_1 rdfs:range rdfs:Resource .
 …
 #+END_SRC
 
