@@ -46,7 +46,7 @@ just want to say hi.
 ** Start the reasoner
 
 #+BEGIN_SRC sh
-cd RDF-Reasoner/prolog/semweb
+cd RDF-Reasoner/prolog/sw
 swipl rdf_reasoner.pl
 #+END_SRC
 
