@@ -131,6 +131,7 @@ axiom(rdf,  rdf(rdf:rest,           rdf:type,           rdf:'Property'  )).
 axiom(rdf,  rdf(rdf:value,          rdf:type,           rdf:'Property'  )).
 axiom(rdf,  rdf(rdf:nil,            rdf:type,           rdf:'List'      )).
 axiom(rdf,  rdf(P,                  rdf:type,           rdf:'Property'  )) :-
+  rdf_check_predicate(P),
   rdf_container_membership_property(P).
 axiom(rdfs, rdf(rdf:type,           rdfs:domain,        rdfs:'Resource' )).
 axiom(rdfs, rdf(rdfs:domain,        rdfs:domain,        rdf:'Property'  )).
@@ -171,10 +172,13 @@ axiom(rdfs, rdf(rdfs:'ContainerMembershipProperty', rdfs:subClassOf, rdf:'Proper
 axiom(rdfs, rdf(rdfs:isDefinedBy,   rdfs:subPropertyOf, rdfs:seeAlso    )).
 axiom(rdfs, rdf(rdfs:'Datatype',    rdfs:subClassOf,    rdfs:'Class'    )).
 axiom(rdfs, rdf(P,                  rdf:type,           rdfs:'ContainerMembershipProperty')) :-
+  rdf_check_predicate(P),
   rdf_container_membership_property(P).
 axiom(rdfs, rdf(P,                  rdfs:domain,        rdfs:'Resource' )) :-
+  rdf_check_predicate(P),
   rdf_container_membership_property(P).
 axiom(rdfs, rdf(P,                  rdfs:range,         rdfs:'Resource' )) :-
+  rdf_check_predicate(P),
   rdf_container_membership_property(P).
 
 
