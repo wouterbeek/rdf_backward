@@ -117,18 +117,6 @@ add_statement(rdf(S,P,O), G) :-
 
 
 
-%! add_container_memberchip_property_axioms is det.
-
-add_container_memberchip_property_axioms :-
-  forall(
-    rdf_container_membership_property(P),
-    (
-      add_axiom(rdf, rdf(P, rdf:type, rdf:'Property')),
-      add_axiom(rdfs, rdf(P, rdf:type, rdfs:'ContainerMembershipProperty')),
-      add_axiom(rdfs, rdf(P, rdfs:domain, rdfs:'Resource')),
-      add_axiom(rdfs, rdf(P, rdfs:range, rdfs:'Resource'))
-    )
-  ).
 
 
 
@@ -142,6 +130,8 @@ axiom(rdf,  rdf(rdf:first,          rdf:type,           rdf:'Property'  )).
 axiom(rdf,  rdf(rdf:rest,           rdf:type,           rdf:'Property'  )).
 axiom(rdf,  rdf(rdf:value,          rdf:type,           rdf:'Property'  )).
 axiom(rdf,  rdf(rdf:nil,            rdf:type,           rdf:'List'      )).
+axiom(rdf,  rdf(P,                  rdf:type,           rdf:'Property'  )) :-
+  rdf_container_membership_property(P).
 axiom(rdfs, rdf(rdf:type,           rdfs:domain,        rdfs:'Resource' )).
 axiom(rdfs, rdf(rdfs:domain,        rdfs:domain,        rdf:'Property'  )).
 axiom(rdfs, rdf(rdfs:range,         rdfs:domain,        rdf:'Property'  )).
@@ -180,6 +170,12 @@ axiom(rdfs, rdf(rdf:'Seq',          rdfs:subClassOf,    rdfs:'Container')).
 axiom(rdfs, rdf(rdfs:'ContainerMembershipProperty', rdfs:subClassOf, rdf:'Property')).
 axiom(rdfs, rdf(rdfs:isDefinedBy,   rdfs:subPropertyOf, rdfs:seeAlso    )).
 axiom(rdfs, rdf(rdfs:'Datatype',    rdfs:subClassOf,    rdfs:'Class'    )).
+axiom(rdfs, rdf(P,                  rdf:type,           rdfs:'ContainerMembershipProperty')) :-
+  rdf_container_membership_property(P).
+axiom(rdfs, rdf(P,                  rdfs:domain,        rdfs:'Resource' )) :-
+  rdf_container_membership_property(P).
+axiom(rdfs, rdf(P,                  rdfs:range,         rdfs:'Resource' )) :-
+  rdf_container_membership_property(P).
 
 
 
@@ -328,11 +324,13 @@ rdf_container_membership_property(P) :-
 
 %! set_stage(+Stage:oneof([reasoning])) is det.
 
+set_stage(Stage) :-
+  setting(stage, Stage), !.
 set_stage(reasoning) :-
-  setting(stage, reasoning), !.
-set_stage(reasoning) :-
-  add_container_memberchip_property_axioms,
   set_setting(stage, reasoning).
+set_stage(setup) :-
+  abolish_all_tables,
+  setting(stage, reasoning), !.
 
 
 
