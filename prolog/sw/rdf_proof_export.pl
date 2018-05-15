@@ -20,7 +20,7 @@ sudo dnf install graphviz # Red Hat, Fedora
 
 # Debug info
 
-In order to display the export output, run `?- debug(gv).'
+In order to display the export output, run `?- debug(dot).'
 
 ---
 
@@ -100,9 +100,9 @@ view_proof(Tree) :-
 % GENERICS %
 
 export_proof_stream(Out, Tree) :-
-  format_debug(gv, Out, "digraph g {", []),
+  format_debug(dot, Out, "digraph g {", []),
   export_tree(Out, Tree),
-  format_debug(gv, Out, "}", []).
+  format_debug(dot, Out, "}", []).
 
 export_tree(Out, t(Rule,Concl,Prems)) :-
   gv_node_id(Concl, X),
@@ -139,11 +139,11 @@ gv_attributes(Attrs, Str) :-
   atomics_to_string(Strs, ",", Str).
 
 gv_edge(Out, FromId, ToId) :-
-  format_debug(gv, Out, "  ~a -> ~a;", [FromId,ToId]).
+  format_debug(dot, Out, "  ~a -> ~a;", [FromId,ToId]).
 
 gv_node(Out, Id, Attrs) :-
   gv_attributes(Attrs, Str),
-  format_debug(gv, Out, "  ~a [~s];", [Id,Str]).
+  format_debug(dot, Out, "  ~a [~s];", [Id,Str]).
 
 gv_node_id(Term, Id) :-
   term_to_atom(Term, Atom),
