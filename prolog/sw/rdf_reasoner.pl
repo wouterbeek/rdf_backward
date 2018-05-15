@@ -141,15 +141,11 @@ recognized_datatype_iri(xsd:string).
 
 %! rule(?Rule:compound, ?Conclusion:compound, -Premises:list(compound)) is nondet.
 
-rule(db(G),        rdf(S,P,O),                             []) :-
-  rdf_check_subject(S),
-  rdf_check_predicate(P),
-  rdf_triple(S, P, O, G).
 rule(axiom(Vocab), Concl,                                  []) :-
   axiom(Vocab, Concl).
 rule(rdf(1), rdf(literal(lang(LTag,Lex)),rdf:type,rdf:langString), [rdf(_,_,literal(lang(LTag,Lex)))]) :-
   ground(LTag-Lex).
-rule(rdf(1), rdf(literal(type(D,Lex)),rdf:type,D), [rdf(_,_,literal(type(D,Lex)))]) :-
+rule(rdf(1),       rdf(literal(type(D,Lex)),rdf:type,D),   [rdf(_,_,literal(type(D,Lex)))]) :-
   ground(D-Lex),
   recognized_datatype_iri(D).
 rule(rdf(2),       rdf(P,rdf:type,rdf:'Property'),         [rdf(_S,P,_O)]).
