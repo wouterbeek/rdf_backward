@@ -1,8 +1,11 @@
-:- module(rdf_prefix, [init_rdf_prefixes/0]).
+:- module(rdf_load_prefixes, []).
 
 :- use_module(library(semweb/rdf11)).
 
-init_rdf_prefixes :-
+:- initialization
+   rdf_load_prefixes.
+
+rdf_load_prefixes :-
   forall(
     prefix_(Alias, Prefix),
     rdf_register_prefix(Alias, Prefix)

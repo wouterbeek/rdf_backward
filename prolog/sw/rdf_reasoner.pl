@@ -30,7 +30,7 @@
 :- use_module(library(semweb/rdf11_containers)).
 :- use_module(library(settings)).
 
-:- use_module(rdf_prefix).
+:- use_module(rdf_load_prefixes).
 :- reexport(rdf_proof_export).
 :- reexport(rdf_proof_print).
 
@@ -38,9 +38,6 @@
     axiom/2,
     recognized_datatype_iri/1,
     rule/3.
-
-:- initialization
-   init_rdf_prefixes.
 
 :- multifile
     axiom/2,
