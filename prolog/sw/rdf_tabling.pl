@@ -1,5 +1,5 @@
 :- module(
-  rdf_reasoner,
+  rdf_tabling,
   [
   % SETUP
     add_axiom/2,                   % +Vocab, +Statement
@@ -18,7 +18,7 @@
      op(650, xfx, ^^)
    ]).
 
-/** <module> A simple backward-chaining reasoner for RDF(S)
+/** <module> RDF(S) entailment through mode-directed tabling
 
 @author Wouter Beek
 @version 2018
