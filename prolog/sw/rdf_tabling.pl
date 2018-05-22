@@ -215,7 +215,7 @@ rule(rdf(1),       rdf(Val^^D,rdf:type,D),                 [rdf(_S,_P,Val^^D)]) 
   recognized_datatype_iri(D).
 rule(rdf(2),       rdf(P,rdf:type,rdf:'Property'),         [rdf(_S,P,_O)]).
 rule(rdfs(1),      rdf(D,rdf:type,rdfs:'Datatype'),        []) :-
-  recognized_datatype_iri(D).  
+  (rdf_equal(D, rdf:langString) ; recognized_datatype_iri(D)).
 rule(rdfs(2),      rdf(I,rdf:type,C),                      [rdf(P,rdfs:domain,C),rdf(I,P,_)]).
 rule(rdfs(3),      rdf(I,rdf:type,C),                      [rdf(P,rdfs:range,C),rdf(_,P,I)]).
 rule(rdfs('4a'),   rdf(I,rdf:type,rdfs:'Resource'),        [rdf(I,_,_)]).
