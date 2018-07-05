@@ -32,21 +32,17 @@ just want to say hi.
 
   1. Install [[http://www.swi-prolog.org][SWI-Prolog]], an awesome logic programming language with
      exquisite Semantic Web support.
-  2. Clone this repository: ~git clone
-     https://github.com/wouterbeek/RDF-Tabling~
-  3. Optionally, in case you want to see visualizations of proof tree
-     (and who does not?), install [[http://www.graphviz.org/][GraphViz]]:
+  2. Start SWI-Prolog and install this library using the Prolog
+     package manager:
+     ~pack_install('git://github.com/wouterbeek/rdf_tabling').~
+  3. From now on, you can use the library by loading it as follows:
+     ~[library(semweb/rdf_tabling)].~
+  4. Optionally, in case you want to see visualizations of proof
+     trees, install [[http://www.graphviz.org/][GraphViz]]:
      - On Red Hat-based distro's (e.g., Fedora): ~sudo dnf install graphviz~
      - On Debian-based distro's (e.g., Ubuntu): ~sudo apt install graphviz~
 
 * Example use
-
-** Start the reasoner
-
-#+BEGIN_SRC sh
-cd RDF-Tabling/prolog/semweb
-swipl rdf_tabling.pl
-#+END_SRC
 
 ** Check whether a specific statement can be proven
 
