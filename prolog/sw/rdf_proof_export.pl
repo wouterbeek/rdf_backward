@@ -113,7 +113,7 @@ export_tree(Out, t(Rule,Concl,Prems)) :-
   gv_node(Out, Y, [label(XYLabel)]),
   gv_edge(Out, X, Y),
   maplist(export_subtree(Out, Y), Prems).
-  
+
 export_subtree(Out, Y, t(Rule,Concl,Prems)) :-
   gv_node_id(Concl, Z),
   with_output_to(string(ZLabel), rdf_proof_print:pp_tp(Concl)),
