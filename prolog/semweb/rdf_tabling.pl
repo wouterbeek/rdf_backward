@@ -8,9 +8,10 @@
     add_statement/1,               % +Statement
     add_statement/2,               % +Statement, +G
   % REASONING
-    prove/1,                       % ?Conclusion
-    prove_tree/1,                  % ?Conclusion
-    prove_tree/2                   % ?Conclusion, -Proof
+    rdf_proof/1,                   % ?Conclusion
+    rdf_proof_export/1,            % +File
+    rdf_proof_tree/1,              % ?Conclusion
+    rdf_proof_tree/2               % ?Conclusion, -Proof
   ]
 ).
 :- reexport(library(semweb/rdf11), [
@@ -29,6 +30,8 @@
 :- use_module(library(semweb/rdf11)).
 :- use_module(library(semweb/rdf11_containers)).
 :- use_module(library(settings)).
+
+:- use_module(library(sw/rdf_export)).
 
 :- use_module(rdf_load_prefixes).
 :- reexport(rdf_proof_export).
@@ -52,9 +55,9 @@
    add_statement(t),
    add_statement(t, r),
    axiom(?, t),
-   prove(t),
-   prove_tree(t),
-   prove_tree(t, -),
+   rdf_proof(t),
+   rdf_proof_tree(t),
+   rdf_proof_tree(t, -),
    recognized_datatype_iri(r),
    rule(?, t, t).
 
@@ -62,8 +65,8 @@
            "The stage in which the reasoner is currently.").
 
 :- table
-   prove_/1,
-   prove_(_,lattice(shortest_proof)).
+   rdf_proof_/1,
+   rdf_proof_(_,lattice(shortest_proof)).
 
 
 
@@ -114,9 +117,6 @@ add_statement(rdf(S,P,O)) :-
 add_statement(rdf(S,P,O), G) :-
   assume_setup_stage(add_statement/2),
   rdf_assert(S, P, O, G).
-
-
-
 
 
 
@@ -240,40 +240,54 @@ Implementation of the reasoner itself.  Invoking one of the prove
 predicates automatically end setup stage and enters reasoning stage.
 */
 
-%! prove(++Conclusion:compound) is semidet.
-%! prove(+Conclusion:compound) is nondet.
-%! prove(-Conclusion:compound) is multi.
+%! rdf_proof(++Conclusion:compound) is semidet.
+%! rdf_proof(+Conclusion:compound) is nondet.
+%! rdf_proof(-Conclusion:compound) is multi.
 
-prove(Concl) :-
+rdf_proof(Concl) :-
   set_stage(reasoning),
-  prove_(Concl).
+  rdf_proof_(Concl).
 
-prove_(Concl) :-
+rdf_proof_(Concl) :-
   rule(_Rule, Concl, Prems),
-  maplist(prove_, Prems).
+  maplist(rdf_proof_, Prems).
 
 
 
-%! prove_tree(++Conclusion:compound) is semidet.
-%! prove_tree(+Conclusion:compound) is nondet.
-%! prove_tree(-Conclusion:compound) is multi.
+%! rdf_proof_export(+File:atom) is det.
 
-prove_tree(Concl) :-
-  prove_tree(Concl, Proof),
+rdf_proof_export(File) :-
+  setup_call_cleanup(
+    gzopen(File, write, Out),
+    forall(
+      rdf_proof(Triple),
+      rdf_write_triple(Out, Triple)
+    ),
+    close(Out)
+  ).
+
+
+
+%! rdf_proof_tree(++Conclusion:compound) is semidet.
+%! rdf_proof_tree(+Conclusion:compound) is nondet.
+%! rdf_proof_tree(-Conclusion:compound) is multi.
+
+rdf_proof_tree(Concl) :-
+  rdf_proof_tree(Concl, Proof),
   view_proof(Proof).
 
 
-%! prove_tree(++Conclusion:compound, -Proof:compound) is semidet.
-%! prove_tree(+Conclusion:compound, -Proof:compound) is nondet.
-%! prove_tree(-Conclusion:compound, -Proof:compound) is multi.
+%! rdf_proof_tree(++Conclusion:compound, -Proof:compound) is semidet.
+%! rdf_proof_tree(+Conclusion:compound, -Proof:compound) is nondet.
+%! rdf_proof_tree(-Conclusion:compound, -Proof:compound) is multi.
 
-prove_tree(Concl, Proof) :-
+rdf_proof_tree(Concl, Proof) :-
   set_stage(reasoning),
-  prove_(Concl, Proof).
+  rdf_proof_(Concl, Proof).
 
-prove_(Concl, t(Rule,Concl,Trees)) :-
+rdf_proof_(Concl, t(Rule,Concl,Trees)) :-
   rule(Rule, Concl, Prems),
-  maplist(prove_, Prems, Trees).
+  maplist(rdf_proof_, Prems, Trees).
 
 shortest_proof(Tree1, Tree2, Tree) :-
   maplist(tree_depth, [Tree1,Tree2], [Depth1,Depth2]),
@@ -323,7 +337,7 @@ rdf_check_subject(S) :-
 rdf_container_membership_property(P) :-
   rdf_predicate(P),
   rdfs_container_membership_property(P).
-  
+
 
 
 %! set_stage(+Stage:oneof([reasoning])) is det.
