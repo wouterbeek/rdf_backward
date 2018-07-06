@@ -31,8 +31,6 @@
 :- use_module(library(semweb/rdf11_containers)).
 :- use_module(library(settings)).
 
-:- use_module(library(sw/rdf_export)).
-
 :- use_module(rdf_load_prefixes).
 :- reexport(rdf_proof_export).
 :- reexport(rdf_proof_print).
