@@ -9,7 +9,6 @@
     add_statement/2,               % +Statement, +G
   % REASONING
     rdf_proof/1,                   % ?Conclusion
-    rdf_proof_export/1,            % +File
     rdf_proof_tree/1,              % ?Conclusion
     rdf_proof_tree/2               % ?Conclusion, -Proof
   ]
@@ -27,13 +26,13 @@
 
 :- use_module(library(apply)).
 :- use_module(library(lists)).
-:- use_module(library(semweb/rdf11)).
-:- use_module(library(semweb/rdf11_containers)).
 :- use_module(library(settings)).
 
-:- use_module(rdf_load_prefixes).
-:- reexport(rdf_proof_export).
-:- reexport(rdf_proof_print).
+:- use_module(library(semweb/rdf_mem)).
+:- use_module(library(semweb/rdf_prefix)).
+:- use_module(library(semweb/rdf_proof_export)).
+:- use_module(library(semweb/rdf_proof_print)).
+:- use_module(library(semweb/rdf_term)).
 
 :- dynamic
     axiom/2,
@@ -107,14 +106,14 @@ add_rule(Rule, Concl, Prems) :-
 
 add_statement(rdf(S,P,O)) :-
   assume_setup_stage(add_statement/1),
-  rdf_assert(S, P, O).
+  rdf_assert_triple(S, P, O).
 
 
 %! add_statement(+Statement:compound, +G:atom) is det.
 
 add_statement(rdf(S,P,O), G) :-
   assume_setup_stage(add_statement/2),
-  rdf_assert(S, P, O, G).
+  rdf_assert_triple(S, P, O, G).
 
 
 
@@ -203,7 +202,7 @@ recognized_datatype_iri(xsd:string).
 rule(db(G),        rdf(S,P,O),                             []) :-
   rdf_check_subject(S),
   rdf_check_predicate(P),
-  rdf(S, P, O, G).
+  rdf_triple(S, P, O, G).
 rule(axiom(Vocab), Concl,                                  []) :-
   axiom(Vocab, Concl).
 rule(rdf(1),       rdf(Lex@LTag,rdf:type,rdf:langString),  [rdf(_S,_P,Lex@LTag)]) :-
@@ -249,20 +248,6 @@ rdf_proof(Concl) :-
 rdf_proof_(Concl) :-
   rule(_Rule, Concl, Prems),
   maplist(rdf_proof_, Prems).
-
-
-
-%! rdf_proof_export(+File:atom) is det.
-
-rdf_proof_export(File) :-
-  setup_call_cleanup(
-    gzopen(File, write, Out),
-    forall(
-      rdf_proof(Triple),
-      rdf_write_triple(Out, Triple)
-    ),
-    close(Out)
-  ).
 
 
 
@@ -326,15 +311,6 @@ rdf_check_subject(S) :-
   var(S), !.
 rdf_check_subject(S) :-
   rdf_is_subject(S).
-
-
-
-%! rdf_container_membership_property(+P:atom) is semidet.
-%! rdf_container_membership_property(-P:atom) is nondet.
-
-rdf_container_membership_property(P) :-
-  rdf_predicate(P),
-  rdfs_container_membership_property(P).
 
 
 

@@ -12,7 +12,9 @@
 */
 
 :- use_module(library(apply)).
-:- use_module(library(semweb/rdf11)).
+
+:- use_module(library(semweb/rdf_prefix)).
+:- use_module(library(semweb/rdf_term)).
 
 :- rdf_meta
    rdf_proof_print(t).
@@ -47,18 +49,6 @@ pp_tp(rdf(S,P,O)) :-
 pp_term(Var) :-
   var(Var), !,
   format("~w", [Var]).
-pp_term(Lex@LTag) :- !,
-  format('"~s"@~a', [Lex,LTag]).
-pp_term(Value^^D) :- !,
-  rdf_lexical_form(Value^^D, Lex^^D),
-  format('"~s"^^', [Lex]),
-  pp_iri(D).
-pp_term(Iri) :-
-  pp_iri(Iri).
-
-pp_iri(Iri) :-
-  rdf_current_prefix(Alias, Prefix),
-  atom_concat(Prefix, Rest, Iri), !,
-  format("~a:~a", [Alias,Rest]).
-pp_iri(Iri) :-
-  format("~a", [Iri]).
+pp_term(Term) :-
+  rdf_atom_term(Atom, Term),
+  format("~a", [Atom]).
