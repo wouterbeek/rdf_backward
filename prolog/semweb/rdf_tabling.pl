@@ -326,5 +326,5 @@ set_stage(setup) :-
 tree_depth(t(_,_,[]), 0) :- !.
 tree_depth(t(_,_,Trees), Depth) :-
   maplist(tree_depth, Trees, Depths),
-  min_list(Depths, Depth0),
+  max_list(Depths, Depth0),
   Depth is Depth0 + 1.
