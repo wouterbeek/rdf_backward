@@ -13,10 +13,6 @@
     rdf_proof_tree/2               % ?Conclusion, -Proof
   ]
 ).
-:- reexport(library(semweb/rdf11), [
-     op(110, xfx, @),
-     op(650, xfx, ^^)
-   ]).
 
 /** <module> RDF(S) entailment through mode-directed tabling
 
@@ -31,7 +27,6 @@
 :- use_module(library(semweb/rdf_mem)).
 :- use_module(library(semweb/rdf_prefix)).
 :- use_module(library(semweb/rdf_proof_export)).
-:- use_module(library(semweb/rdf_proof_print)).
 :- use_module(library(semweb/rdf_term)).
 
 :- dynamic
@@ -205,10 +200,10 @@ rule(db(G),        rdf(S,P,O),                             []) :-
   rdf_triple(S, P, O, G).
 rule(axiom(Vocab), Concl,                                  []) :-
   axiom(Vocab, Concl).
-rule(rdf(1),       rdf(Lex@LTag,rdf:type,rdf:langString),  [rdf(_S,_P,Lex@LTag)]) :-
-  ground(Lex@LTag).
-rule(rdf(1),       rdf(Val^^D,rdf:type,D),                 [rdf(_S,_P,Val^^D)]) :-
-  ground(Val^^D),
+rule(rdf(1),       rdf(literal(lan(LTag,Lex)),rdf:type,rdf:langString), [rdf(_S,_P,literal(lang(LTag,Lex)))]) :-
+  ground(LTag-Lex).
+rule(rdf(1),       rdf(literal(type(D,Val)),rdf:type,D),   [rdf(_S,_P,literal(type(D,Val)))]) :-
+  ground(D-Val),
   recognized_datatype_iri(D).
 rule(rdf(2),       rdf(P,rdf:type,rdf:'Property'),         [rdf(_S,P,_O)]).
 rule(rdfs(1),      rdf(D,rdf:type,rdfs:'Datatype'),        []) :-
