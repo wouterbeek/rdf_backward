@@ -1,16 +1,10 @@
+:- encoding(utf8).
 :- module(
   rdf_tabling,
   [
-  % SETUP
-    add_axiom/2,                   % +Vocab, +Statement
-    add_recognized_datatype_iri/1, % +D
-    add_rule/3,                    % +Rule, +Conclusion, +Premises
-    add_statement/1,               % +Statement
-    add_statement/2,               % +Statement, +G
-  % REASONING
-    rdf_proof/1,                   % ?Conclusion
-    rdf_proof_tree/1,              % ?Conclusion
-    rdf_proof_tree/2               % ?Conclusion, -Proof
+    rdf_proof/1,      % ?Conclusion
+    rdf_proof_tree/1, % ?Conclusion
+    rdf_proof_tree/2  % ?Conclusion, -Proof
   ]
 ).
 
@@ -41,11 +35,6 @@
     prolog:message//1.
 
 :- rdf_meta
-   add_axiom(+, t),
-   add_recognized_datatype_iri(r),
-   add_rule(+, t, t),
-   add_statement(t),
-   add_statement(t, r),
    axiom(?, t),
    rdf_proof(t),
    rdf_proof_tree(t),
@@ -64,54 +53,6 @@
 
 
 
-/* SETUP STAGE
-
-Implementation of the RDF(S) reasoner's setup stage.
-
-This stage allows axioms, recognized datatype IRIs, rules, are database
-statements to be added.  Once everything has been added, the setup
-stage is ended by invoking one of the reasoning predicates.
-*/
-
-%! add_axiom(+Vocab:atom, +Triple:compound) is det.
-
-add_axiom(Vocab, Triple) :-
-  assume_setup_stage(add_axiom/2),
-  (axiom(Vocab, Triple) -> true ; assertz(axiom(Vocab, Triple))).
-
-
-
-%! add_recognized_datatype_iri(+D:atom) is det.
-
-add_recognized_datatype_iri(D) :-
-  assume_setup_stage(add_recognized_datatype_iri/1),
-  (recognized_datatype_iri(D) -> true ; assertz(recognized_datatype_iri(D))).
-
-
-
-%! add_rule(+Rule:compound, +Conclusion:compound, +Premises:list(compound)) is det.
-
-add_rule(Rule, Concl, Prems) :-
-  assume_setup_stage(add_rule/1),
-  (rule(Rule, _, _) -> true ; assertz(rule(Rule,Concl,Prems))).
-
-
-
-%! add_statement(+Statement:compound) is det.
-
-add_statement(rdf(S,P,O)) :-
-  assume_setup_stage(add_statement/1),
-  rdf_assert_triple(S, P, O).
-
-
-%! add_statement(+Statement:compound, +G:atom) is det.
-
-add_statement(rdf(S,P,O), G) :-
-  assume_setup_stage(add_statement/2),
-  rdf_assert_triple(S, P, O, G).
-
-
-
 %! axiom(?Vocab:term, ?Triple:compound) is nondet.
 
 axiom(rdf,  rdf(rdf:type,           rdf:type,           rdf:'Property'  )).
@@ -124,7 +65,7 @@ axiom(rdf,  rdf(rdf:value,          rdf:type,           rdf:'Property'  )).
 axiom(rdf,  rdf(rdf:nil,            rdf:type,           rdf:'List'      )).
 axiom(rdf,  rdf(P,                  rdf:type,           rdf:'Property'  )) :-
   rdf_check_predicate(P),
-  rdf_container_membership_property(P).
+  rdf_container_membership_property(_, P, _).
 axiom(rdfs, rdf(rdf:type,           rdfs:domain,        rdfs:'Resource' )).
 axiom(rdfs, rdf(rdfs:domain,        rdfs:domain,        rdf:'Property'  )).
 axiom(rdfs, rdf(rdfs:range,         rdfs:domain,        rdf:'Property'  )).
@@ -165,13 +106,13 @@ axiom(rdfs, rdf(rdfs:isDefinedBy,   rdfs:subPropertyOf, rdfs:seeAlso    )).
 axiom(rdfs, rdf(rdfs:'Datatype',    rdfs:subClassOf,    rdfs:'Class'    )).
 axiom(rdfs, rdf(P,                  rdf:type,           rdfs:'ContainerMembershipProperty')) :-
   rdf_check_predicate(P),
-  rdf_container_membership_property(P).
+  rdf_container_membership_property(_, P, _).
 axiom(rdfs, rdf(P,                  rdfs:domain,        rdfs:'Resource' )) :-
   rdf_check_predicate(P),
-  rdf_container_membership_property(P).
+  rdf_container_membership_property(_, P, _).
 axiom(rdfs, rdf(P,                  rdfs:range,         rdfs:'Resource' )) :-
   rdf_check_predicate(P),
-  rdf_container_membership_property(P).
+  rdf_container_membership_property(_, P, _).
 
 
 
@@ -194,10 +135,10 @@ recognized_datatype_iri(xsd:string).
 
 %! rule(?Rule:compound, ?Conclusion:compound, -Premises:list(compound)) is nondet.
 
-rule(db(G),        rdf(S,P,O),                             []) :-
+rule(B,            rdf(S,P,O),                             []) :-
   rdf_check_subject(S),
   rdf_check_predicate(P),
-  rdf_triple(S, P, O, G).
+  tp(B, S, P, O).
 rule(axiom(Vocab), Concl,                                  []) :-
   axiom(Vocab, Concl).
 rule(rdf(1),       rdf(literal(lan(LTag,Lex)),rdf:type,rdf:langString), [rdf(_S,_P,literal(lang(LTag,Lex)))]) :-

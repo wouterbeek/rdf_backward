@@ -1,6 +1,0 @@
-{
-  "dependencies": [
-    {"user": "wouterbeek", "repo": "graph_export"},
-    {"user": "wouterbeek", "repo": "Pro-RDF-DB"}
-  ]
-}
