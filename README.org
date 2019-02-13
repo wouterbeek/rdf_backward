@@ -1,16 +1,12 @@
+# -*- mode: org; -*-
+#+title: rdf_backward
 #+author: Wouter Beek
-#+title: RDF-Tabling
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://www.pirilampo.org/styles/readtheorg/css/readtheorg.css"/>
-#+HTML_HEAD: <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-#+HTML_HEAD: <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-#+HTML_HEAD: <script type="text/javascript" src="https://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.js"></script>
-#+HTML_HEAD: <script type="text/javascript" src="https://www.pirilampo.org/styles/readtheorg/js/readtheorg.js"></script>
-#+STARTUP: inlineimages
-#+STARTUP: latexpreview
+#+email: (concat "wouter" at-sign "triply.cc")
+#+language: en-us
+#+setupfile: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
 
-This library implements full RDF(S) entailment using mode-directed
-tabling.
+This library implements RDF(S) entailment using mode-directed tabling
+/ backward reasoning.
 
 Firstly, this library is able to determine whether a given atomic
 ground fact is true or not, based on a specified collection of axioms,
@@ -25,44 +21,48 @@ This library is implemented in SWI-Prolog, and uses SWI's standard
 tabling and Semantic Web libraries.  The implementation tries to
 strictly adhere to the [[https://www.w3.org/TR/rdf11-mt/][RDF 1.1 Semantics Recommendation (2014-02-25)]].
 
-Please [[https://github.com/wouterbeek/RDF-Tabling/issues][open a Github issue]] if you found a bug, have a suggestion, or
+Please [[https://github.com/wouterbeek/rdf_backward/issues][open a Github issue]] if you found a bug, have a suggestion, or
 just want to say hi.
 
 * Installation
 
-  1. Install [[http://www.swi-prolog.org][SWI-Prolog]], an awesome logic programming language with
-     exquisite Semantic Web support.
-  2. Start SWI-Prolog and install this library using the Prolog
-     package manager:
-     ~pack_install('git://github.com/wouterbeek/rdf_tabling').~
-  3. From now on, you can use the library by loading it as follows:
-     ~[library(semweb/rdf_tabling)].~
-  4. Optionally, in case you want to see visualizations of proof
-     trees, install [[http://www.graphviz.org/][GraphViz]]:
-     - On Red Hat-based distro's (e.g., Fedora): ~sudo dnf install graphviz~
-     - On Debian-based distro's (e.g., Ubuntu): ~sudo apt install graphviz~
+  1. Install [[http://www.swi-prolog.org][SWI-Prolog]].
 
-* Example use
+  2. Install [[https://github.com/wouterbeek/prolog_rdf][prolog_rdf]] and its dependencies.
+
+  3. Add the following lines to your ~.swiplrc~ file:
+
+     #+begin_src prolog
+     user:file_search_path(library, '/your/path/to/rdf_backward/prolog').
+     #+end_src
+
+* Using the library
+
+Prior to use, the following module must be imported:
+
+#+begin_src prolog
+?- [library(semweb/rdf_backward)].
+#+end_src
 
 ** Check whether a specific statement can be proven
 
-#+BEGIN_SRC prolog
-?- rdf_proof(rdf(rdfs:'Class',rdf:type,rdfs:'Class')).
+#+begin_src prolog
+?- rdf_prove(tp(rdfs:'Class',rdf:type,rdfs:'Class')).
 true.
-#+END_SRC
+#+end_src
 
-** Obtain a proof tree for a specific statement
+** Obtain a proof for a specific statement
 
 It's great that this statement can be proven, but I would like to see
 a particular proof:
 
-#+BEGIN_SRC prolog
-?- rdf_proof_tree(rdf(rdfs:'Class',rdf:type,rdfs:'Class').
-#+END_SRC
+#+begin_src prolog
+?- rdf_proof(tp(rdfs:'Class',rdf:type,rdfs:'Class').
+#+end_src
 
-This displays the following proof tree:
+This displays the following proof:
 
-[[./doc/img/class.svg]]
+[[./img/class.svg]]
 
 ** Non-empty setup stage
 
@@ -75,34 +75,25 @@ entered, when the first proof is invoked.
 First, we add the following statements to our database, here expressed
 in Turtle:
 
-#+BEGIN_SRC ttl
-ex:happyMarriedTo rdfs:subPropertyOf _:1       .
-_:1               rdfs:domain        ex:Person .
-ex:markus         ex:happyMarriedTo  ex:anja   .
-#+END_SRC
-
-At the Prolog top-level, this is done in the following way:
-
-#+BEGIN_SRC prolog
-?- add_statement(rdf(ex:happyMarriedTo,rdfs:subPropertyOf,'_:1')).
-?- add_statement(rdf('_:1',rdfs:domain,ex:'Person')).
-?- add_statement(rdf(ex:markus,ex:happyMarriedTo,ex:anja)).
-#+END_SRC
+#+begin_src ttl
+ex:happyMarriedTo rdfs:subPropertyOf [ rdfs:domain ex:Person ].
+ex:markus         ex:happyMarriedTo  ex:anja.
+#+end_src
 
 Now that we have extended our database, we want to prove the following
 statement expressed in Turtle:
 
-#+BEGIN_SRC ttl
-ex:markus a ex:Person .
-#+END_SRC
+#+begin_src ttl
+ex:markus a ex:Person.
+#+end_src
 
 At the Prolog top-level, this is done as follows:
 
-#+BEGIN_SRC prolog
-?- rdf_proof_tree(rdf(ex:markus,rdf:type,ex:'Person')).
-#+END_SRC
+#+begin_src prolog
+?- rdf_proof(tp(ex:markus,rdf:type,ex:'Person')).
+#+end_src
 
-[[./doc/img/markus.svg]]
+[[./img/markus.svg]]
 
 Notice that this is an example of a proof tree that cannot be
 expressed in terms of regular triples, and requires generalized
@@ -116,18 +107,22 @@ statements.  The fact that the conclusion is non-ground is indicated
 by the Prolog variables ~P~ and ~O~.  A solution is a binding for
 these two variables that results in a provable ground statement.
 
-#+BEGIN_SRC prolog
-?- add_statement(rdf(rdf:s,rdf:p,""^^xsd:string)).
-?- rdf_proof_tree(rdf(""^^xsd:string,P,O)).
+#+begin_src ttl
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+<s:s> <p:p> ""^^xsd:string.
+#+end_src
+
+#+begin_src prolog
+?- rdf_prove(tp(literal(type(xsd:string,'')),P,O)).
 P = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
 O = 'http://www.w3.org/2000/01/rdf-schema#Resource' ;
-#+END_SRC
+#+end_src
 
 The bindings for ~P~ and ~O~ that are printed at the top-level result
 in a provable ground statement.  In addition, the following proof tree
 is shown:
 
-[[./doc/img/string-1.svg]]
+[[./img/string-1.svg]]
 
 In this case, there are multiple solutions, i.e., multiple bindings
 for the variables ~P~ and ~O~ that result in a ground statement that
@@ -136,23 +131,441 @@ can be proven.
 Such additional solutions can be requested at the Prolog top-level by
 pressing the semicolon key (~;~):
 
-#+BEGIN_SRC prolog
+#+begin_src prolog
 P = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
 O = 'http://www.w3.org/2001/XMLSchema#string' ;
-#+END_SRC
+#+end_src
 
-[[./doc/img/string-2.svg]]
+[[./img/string-2.svg]]
 
 And by pressing the semicolon a second time, we get the third
 solution:
 
-#+BEGIN_SRC prolog
+#+begin_src prolog
 P = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
 O = 'http://www.w3.org/2000/01/rdf-schema#Literal'.
-#+END_SRC
+#+end_src
 
-[[./doc/img/string-3.svg]]
+[[./img/string-3.svg]]
 
 There are no more solutions, and it is not possible to press the
 semicolon a third time.  At the top level, this is indicated by the
 dot (~.~) character.
+* Theory
+
+The entailment examples in subsequent sections are derived from the
+following example graph:
+
+#+begin_src ttl
+prefix ex: <https://example.org/>
+ex:s ex:p "Hello, world!"@en-us.
+#+end_src
+
+** Preliminaries
+
+This section introduces some simple notation that is used in
+subsequent sections.
+
+*** Sub-atomic terms
+
+The atomic terms in RDF have internal structure.  We therefore first
+define the ingredients from which RDF atomic terms are composed:
+
+  - *Blank node labels* ($B$) <<blank node label>>
+
+  - *IRIs* ($I$) <<IRI>>
+
+    We can distinguish the following subsets of IRIs:
+
+    - *Datatype IRIs* ($D$) <<datatype IRI>>
+
+      The IRIs that denote datatypes.
+
+    - *Graph names* ($G$) <<graph name>>
+
+      The IRIs that denote set of triples or graphs.
+
+    - *Skolem IRIs* <<Skolem IRI>>
+
+      The IRIs that are used to systematically replace [[blank node
+      label]]s.
+
+    - *Unary predicates* ($C$)
+
+      The IRIs that denote classes.
+
+    - *Binary predicates* ($P$)
+
+      The IRIs that denote properties.
+
+  - *Language tags* ($LT$) <<language tag>>
+
+    The string that adhere to the grammar presented in IETF BCP 47
+    [Philips2009].
+
+  - *Lexical forms* ($Lex$) <<lexical form>>
+
+    The Unicode strings that are in Normal Form C [Davis2012].
+
+*** Atomic terms
+
+Syntactically speaking, there are three types of <<atomic terms>>,
+composed from the sub-atomic terms defined above:
+
+  - *[[blank node label][Blank node labels]]* ($B$)
+
+  - *[[IRI][IRIs]]* ($I$)
+
+  - *Literals* ($L$) <<literal>>
+
+    The union of typed literals and language-tagged strings:
+
+    - *Typed literals* ($TL$) <<typed literal>>
+
+      Defined as $((D \setminus \{\texttt{rdf:langString}\}) \times
+      Lex) \cup LTS$
+
+    - *Language-tagged strings* ($LTS$) <<language-tagged string>>
+
+      Defined as $\{\texttt{rdf:langString}\} \times Lex \times LT$
+
+These three types of syntactic terms are pairwise disjoint
+[KlyneCarroll2004].
+
+<<name>>
+Apart from being disjoint with $I$ and $Lit$, the set of blank node
+labels is arbitrary.  We sometimes want to specifically refer to the
+terms that are not arbitrary, e.g., the collection of RDF *names*,
+defined as $N := I \cup L$.
+
+<<ground term>>
+The set of RDF *ground terms* can now be defined as $GT := N \cup B$.
+
+<<variable>>
+We also posit a finite set of variable names $V$, which is distinct
+from $GT$.
+
+<<term>>
+The set of RDF *terms* can now be defined as $GTV := GT \cup V$.
+
+**** Serialization
+
+We serialize RDF terms according to the grammars defined in the [[https://www.w3.org/TR/turtle/][Turtle
+1.1 (2014-02-25)]] and [[https://www.w3.org/TR/sparql11-query/][SPARQL 1.1 Query Language (2013-03-21)]] standards.
+The following grammar rules are used in more than one term-specific
+grammar:
+
+    #+begin_src bnf
+    HEX           ::= [0-9] | [A-F] | [a-f]
+    PN_CHARS_BASE ::= [A-Z] | [a-z] | [#x00C0-#x00D6] | [#x00D8-#x00F6]
+                    | [#x00F8-#x02FF] | [#x0370-#x037D] | [#x037F-#x1FFF]
+                    | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF]
+                    | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD]
+                    | [#x10000-#xEFFFF]
+    PN_CHARS_U    ::= PN_CHARS_BASE | '_'
+    #+end_src
+
+  - *Blank node labels*
+
+    We write blank node labels according to grammar rule
+    ~BLANK_NODE_LABEL~:
+
+    #+begin_src bnf
+    BLANK_NODE_LABEL ::= '_:' (PN_CHARS_U | [0-9]) ((PN_CHARS | '.')* PN_CHARS)?
+    PN_CHARS         ::= PN_CHARS_U | '-' | [0-9] | #x00B7 | [#x0300-#x036F]
+                       | [#x203F-#x2040]
+    #+end_src
+
+  - *IRI*
+
+    Since we do not like to write lengthy IRI terms, we will only
+    write *prefixed names*, which follow grammar rule ~PNAME_LN~.  We
+    will never write relative IRIs, since distinguishing relative from
+    absolute IRIs requires in-depth knowledge of the IRI grammar
+    defined in IETF's RFC 3987.  (Since there is currently no
+    implementation of the IRI grammar, it is also not possible to
+    algorithmically distinguish between relative and absolute IRIs.)
+
+    #+begin_src ttl
+    PERCENT      ::= '%' HEX HEX
+    PLX          ::= PERCENT | PN_LOCAL_ESC
+    PN_PREFIX    ::= PN_CHARS_BASE ((PN_CHARS | '.')* PN_CHARS)?
+    PN_LOCAL     ::= (PN_CHARS_U | ':' | [0-9] | PLX)
+                     ((PN_CHARS | '.' | ':' | PLX)* (PN_CHARS | ':' | PLX))?
+    PN_LOCAL_ESC ::= '\' ( '_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '('
+                         | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#'
+                         | '@' | '%' )
+    PNAME_LN     ::= PNAME_NS PN_LOCAL
+    PNAME_NS     ::= PN_PREFIX? ':'
+    #+end_src
+
+  - *Literal*
+
+    We will only write literals using single double quote notation,
+    according to grammar rule ~RDFLiteral~.  This means that double
+    quotes and newlines that are used within a lexical form must be
+    escaped.  Since there is a convenient backslash escaping mechanism
+    that includes these characters, we hope that this is not
+    considered too restrictive.  As with IRI term, in typed literals
+    we always use prefixed names grammar in order to serialize the
+    datatype IRI.
+
+    #+begin_src ttl
+    ECHAR                ::= '\' [tbnrf"'\]
+    LANGTAG              ::= '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
+    RDFLiteral           ::= String (LANGTAG | '^^' iri)?
+    String               ::= STRING_LITERAL_QUOTE
+    STRING_LITERAL_QUOTE ::= '"' ([^#x22#x5C#xA#xD] | ECHAR | UCHAR)* '"'
+    UCHAR                ::= '\u' HEX HEX HEX HEX
+                           | '\U' HEX HEX HEX HEX HEX HEX HEX HEX
+    #+end_src
+
+  - *Variable*
+
+    Following the SPARQL grammar, we serialize variable names
+    according to grammar rule ~VAR1~:
+
+    #+begin_src bnf
+    VAR1    ::= '?' VARNAME
+    VARNAME ::= ( PN_CHARS_U | [0-9] )
+                ( PN_CHARS_U | [0-9] | #x00B7 | [#x0300-#x036F]
+                | [#x203F-#x2040] )*
+    #+end_src
+
+**** Implementation
+
+  - *Blank node label*
+
+    Represented by a Prolog atom with prefix ~'_:'~.
+
+  - *IRI*
+
+    Represented by a Prolog compound term of the form ~:(atom,atom)~.
+
+  - *Literal*
+
+    - *Typed literal*
+
+      Represented by a Prolog compound term of the form
+      ~^^(term,atom)~.
+
+    - *Language-tagged string*
+
+      Represented by a Prolog compound term of the form
+      ~@(string,atom)~.
+
+The operators ~^^/2~ and ~@/2~ can be used in infix notation, to mimic
+the Turtle syntax somewhat: ~""^^xsd:string~, ~"Hello, world!"@en-gb~.
+
+*** Atomic statements
+
+We define the following collections of atomic statements:
+
+  - *Ground triples* ($T$)
+
+    $(B \cup I) \times I \times GT$
+
+  - *Generalized ground triples* ($GGT$)
+
+    $GT \times GT \times GT$
+
+  - *Triple patterns* ($TP$)
+
+    $(B \cup I \cup V) \times (I \cup V) \times GTV$
+
+  - *Generalized triple patterns* ($GTP$)
+
+    $GTV \times GTV \times GTV$
+
+For historic reasons, most triple stores and all standardized RDF
+sertialization formats only support ground triples.  This is
+unfortunate, since there are correct derivations that require
+generalized triples in order to be expressed.
+
+**** Serialization
+
+#+begin_src ttl
+predicate ::= 'a' | term
+term      ::= BLANK_NODE_LABEL | PNAME_LN | RDFLiteral | VAR1
+tp        ::= term predicate term
+#+end_src
+
+**** Implementation
+
+#+begin_src prolog
+rdf(S,P,O)
+#+end_src
+
+** RDF reasoning
+
+*** Axioms
+
+RDF contains the following axioms:
+
+#+begin_src ttl
+rdf:type a rdf:Property.
+rdf:subject a rdf:Property.
+rdf:predicate a rdf:Property.
+rdf:object a rdf:Property.
+rdf:first a rdf:Property.
+rdf:rest a rdf:Property.
+rdf:value a rdf:Property.
+rdf:nil a rdf:List.
+rdf:_1 a rdf:Property.
+rdf:_2 a rdf:Property.
+…
+#+end_src
+
+**** Axioms for container membership properties
+
+Since there are indefinitely many RDF container membership properties
+(denotes by IRIs ~rdf:_N~ where ~N~ is a positive integer), RDF has
+indefinitely many axioms.
+
+However, any concrete database only contains a finite number of
+container membership properties, so a reasoner only needs to assert a
+limited set of container membership property axioms upon
+initialization.
+
+***** Implementation
+
+The initialization of RDF container membership properties is
+implemented by asserting clauses for the dynamic Prolog predicate
+~axiom/2~.
+
+Firstly, ~rdf_container_membership_property/1~ enumerates the RDF
+container membership properties currently present in the RDF database.
+
+Secondly, ~add_axiom/2~ is a simple wrapper that only calls
+~assertz/1~ in case the axiom does not already exist.
+
+#+begin_src prolog
+forall(
+  rdf_container_membership_property(P),
+  add_axiom(rdf, rdf(P,rdf:type,rdf:'Property'))
+).
+#+end_src
+
+*** Rules
+
+RDF entailment occurs under a set $D$ of datatype IRIs, which must
+include ~rdf:langString~ and ~xsd:string~.  The set of recognized
+datatype IRIs can be extended with the dynamic Prolog predicate
+~recognized_datatype_iri/1~.
+
+Once $D$ has be determined, the following RDF rule is in effect:
+
+| *Rule name*     | *Premises*    | *Conclusion*         |
+|-----------------+---------------+----------------------|
+| rdfD1 <<rdfD1>> | ~?s ?p ?o.~   | ~?o a ?d.~           |
+|                 | $?o \in L$    |                      |
+|                 | $d(?o) \in D$ |                      |
+|-----------------+---------------+----------------------|
+| rdfD2 <<rdfD2>> | ~?s ?p ?o.~   | ~?p a rdf:Property.~ |
+|-----------------+---------------+----------------------|
+
+The following generalized triple can be derived by applying rule [[rdfD1]]
+on the example graph:
+
+#+begin_src ttl
+"Hello, world!"@en-gb a rdf:langString.
+#+end_src
+
+** RDFS reasoning
+
+*** Axioms
+
+RDFS contains the following axioms:
+
+#+begin_src ttl
+rdf:type rdfs:domain rdfs:Resource.
+rdfs:domain rdfs:domain rdf:Property.
+rdfs:range rdfs:domain rdf:Property.
+rdfs:subPropertyOf rdfs:domain rdf:Property.
+rdfs:subClassOf rdfs:domain rdfs:Class.
+rdf:subject rdfs:domain rdf:Statement.
+rdf:predicate rdfs:domain rdf:Statement.
+rdf:object rdfs:domain rdf:Statement.
+rdfs:member rdfs:domain rdfs:Resource.
+rdf:first rdfs:domain rdf:List.
+rdf:rest rdfs:domain rdf:List.
+rdfs:seeAlso rdfs:domain rdfs:Resource.
+rdfs:isDefinedBy rdfs:domain rdfs:Resource.
+rdfs:comment rdfs:domain rdfs:Resource.
+rdfs:label rdfs:domain rdfs:Resource.
+rdf:value rdfs:domain rdfs:Resource.
+
+rdf:type rdfs:range rdfs:Class.
+rdfs:domain rdfs:range rdfs:Class.
+rdfs:range rdfs:range rdfs:Class.
+rdfs:subPropertyOf rdfs:range rdf:Property.
+rdfs:subClassOf rdfs:range rdfs:Class.
+rdf:subject rdfs:range rdfs:Resource.
+rdf:predicate rdfs:range rdfs:Resource.
+rdf:object rdfs:range rdfs:Resource.
+rdfs:member rdfs:range rdfs:Resource.
+rdf:first rdfs:range rdfs:Resource.
+rdf:rest rdfs:range rdf:List.
+rdfs:seeAlso rdfs:range rdfs:Resource.
+rdfs:isDefinedBy rdfs:range rdfs:Resource.
+rdfs:comment rdfs:range rdfs:Literal.
+rdfs:label rdfs:range rdfs:Literal.
+rdf:value rdfs:range rdfs:Resource.
+
+rdf:Alt rdfs:subClassOf rdfs:Container.
+rdf:Bag rdfs:subClassOf rdfs:Container.
+rdf:Seq rdfs:subClassOf rdfs:Container.
+rdfs:ContainerMembershipProperty rdfs:subClassOf rdf:Property.
+
+rdfs:isDefinedBy rdfs:subPropertyOf rdfs:seeAlso.
+
+rdfs:Datatype rdfs:subClassOf rdfs:Class.
+
+rdf:_1 a rdfs:ContainerMembershipProperty.
+rdf:_1 rdfs:domain rdfs:Resource.
+rdf:_1 rdfs:range rdfs:Resource.
+…
+#+end_src
+
+Again, the exact set of axioms depends on which container membership
+properties are present in the database.
+
+*** Rules
+
+|-------------------+------------------------------------------+--------------------------------------|
+| *Rule name*       | *Premises*                               | *Conclusion*                         |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs1 <<rdfs1>>   | $?d \in D$                               | ~?d a rdfs:Datatype.~                |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs2 <<rdfs2>>   | ~?p rdfs:domain ?c.~                     | ~?s a ?c.~                           |
+|                   | ~?s ?p ?o.~                              |                                      |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs3 <<rdfs3>>   | ~?p rdfs:range ?c.~                      | ~?o a ?c.~                           |
+|                   | ~?s ?p ?o.~                              |                                      |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs4a <<rdfs4a>> | ~?s ?p ?o.~                              | ~?s a rdfs:Resource.~                |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs4b <<rdfs4b>> | ~?s ?p ?o.~                              | ~?o a rdfs:Resource.~                |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs5 <<rdfs5>>   | ~?p rdfs:subPropertyOf ?q.~              | ~?p rdfs:subPropertyOf ?r.~          |
+|                   | ~?q rdfs:subPropertyOf ?r.~              |                                      |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs6 <<rdfs6>>   | ~?p a rdf:Property.~                     | ~?p rdfs:subPropertyOf ?p.~          |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs7 <<rdfs7>>   | ~?p rdfs:subPropertyOf ?q.~              | ~?s ?q ?o.~                          |
+|                   | ~?s ?p ?o.~                              |                                      |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs8 <<rdfs8>>   | ~?c a rdfs:Class.~                       | ~?c rdfs:subClassOf rdfs:Resource.~  |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs9 <<rdfs9>>   | ~?c rdfs:subClassOf ?d.~                 | ~?i a ?d.~                           |
+|                   | ~?i a ?c.~                               |                                      |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs10 <<rdfs10>> | ~?c a rdfs:Class.~                       | ~?c rdfs:subClassOf ?c.~             |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs11 <<rdfs11>> | ~?c rdfs:subClassOf ?d.~                 | ~?c rdfs:subClassOf ?e.~             |
+|                   | ~?d rdfs:subClassOf ?e.~                 |                                      |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs12 <<rdfs12>> | ~?p a rdfs:ContainerMembershipProperty.~ | ~?p rdfs:subPropertyOf rdfs:member.~ |
+|-------------------+------------------------------------------+--------------------------------------|
+| rdfs13 <<rdfs13>> | ~?d a rdfs:Datatype.~                    | ~?d rdfs:subClassOf rdfs:Literal.~   |
+|-------------------+------------------------------------------+--------------------------------------|
