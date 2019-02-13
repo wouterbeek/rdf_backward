@@ -71,62 +71,62 @@ rdf_prove(Concl) :-
 
 %! axiom(?Vocab:term, ?Triple:compound) is nondet.
 
-axiom(rdf,  rdf(rdf:type,           rdf:type,           rdf:'Property'  )).
-axiom(rdf,  rdf(rdf:subject,        rdf:type,           rdf:'Property'  )).
-axiom(rdf,  rdf(rdf:predicate,      rdf:type,           rdf:'Property'  )).
-axiom(rdf,  rdf(rdf:object,         rdf:type,           rdf:'Property'  )).
-axiom(rdf,  rdf(rdf:first,          rdf:type,           rdf:'Property'  )).
-axiom(rdf,  rdf(rdf:rest,           rdf:type,           rdf:'Property'  )).
-axiom(rdf,  rdf(rdf:value,          rdf:type,           rdf:'Property'  )).
-axiom(rdf,  rdf(rdf:nil,            rdf:type,           rdf:'List'      )).
-axiom(rdf,  rdf(P,                  rdf:type,           rdf:'Property'  )) :-
+axiom(rdf,  tp(rdf:type,           rdf:type,           rdf:'Property'  )).
+axiom(rdf,  tp(rdf:subject,        rdf:type,           rdf:'Property'  )).
+axiom(rdf,  tp(rdf:predicate,      rdf:type,           rdf:'Property'  )).
+axiom(rdf,  tp(rdf:object,         rdf:type,           rdf:'Property'  )).
+axiom(rdf,  tp(rdf:first,          rdf:type,           rdf:'Property'  )).
+axiom(rdf,  tp(rdf:rest,           rdf:type,           rdf:'Property'  )).
+axiom(rdf,  tp(rdf:value,          rdf:type,           rdf:'Property'  )).
+axiom(rdf,  tp(rdf:nil,            rdf:type,           rdf:'List'      )).
+axiom(rdf,  tp(P,                  rdf:type,           rdf:'Property'  )) :-
   when(ground(P), rdf_is_predicate(P)),
   rdf_container_membership_property(P).
-axiom(rdfs, rdf(rdf:type,           rdfs:domain,        rdfs:'Resource' )).
-axiom(rdfs, rdf(rdfs:domain,        rdfs:domain,        rdf:'Property'  )).
-axiom(rdfs, rdf(rdfs:range,         rdfs:domain,        rdf:'Property'  )).
-axiom(rdfs, rdf(rdfs:subPropertyOf, rdfs:domain,        rdf:'Property'  )).
-axiom(rdfs, rdf(rdfs:subClassOf,    rdfs:domain,        rdfs:'Class'    )).
-axiom(rdfs, rdf(rdf:subject,        rdfs:domain,        rdf:'Statement' )).
-axiom(rdfs, rdf(rdf:predicate,      rdfs:domain,        rdf:'Statement' )).
-axiom(rdfs, rdf(rdf:object,         rdfs:domain,        rdf:'Statement' )).
-axiom(rdfs, rdf(rdfs:member,        rdfs:domain,        rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:first,          rdfs:domain,        rdf:'List'      )).
-axiom(rdfs, rdf(rdf:rest,           rdfs:domain,        rdf:'List'      )).
-axiom(rdfs, rdf(rdfs:seeAlso,       rdfs:domain,        rdfs:'Resource' )).
-axiom(rdfs, rdf(rdfs:isDefinedBy,   rdfs:domain,        rdfs:'Resource' )).
-axiom(rdfs, rdf(rdfs:comment,       rdfs:domain,        rdfs:'Resource' )).
-axiom(rdfs, rdf(rdfs:label,         rdfs:domain,        rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:value,          rdfs:domain,        rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:type,           rdfs:range,         rdfs:'Class'    )).
-axiom(rdfs, rdf(rdfs:domain,        rdfs:range,         rdfs:'Class'    )).
-axiom(rdfs, rdf(rdfs:range,         rdfs:range,         rdfs:'Class'    )).
-axiom(rdfs, rdf(rdfs:subPropertyOf, rdfs:range,         rdf:'Property'  )).
-axiom(rdfs, rdf(rdfs:subClassOf,    rdfs:range,         rdfs:'Class'    )).
-axiom(rdfs, rdf(rdf:subject,        rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:predicate,      rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:object,         rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdfs:member,        rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:first,          rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:rest,           rdfs:range,         rdf:'List'      )).
-axiom(rdfs, rdf(rdfs:seeAlso,       rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdfs:isDefinedBy,   rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdfs:comment,       rdfs:range,         rdfs:'Literal'  )).
-axiom(rdfs, rdf(rdfs:label,         rdfs:range,         rdfs:'Literal'  )).
-axiom(rdfs, rdf(rdf:value,          rdfs:range,         rdfs:'Resource' )).
-axiom(rdfs, rdf(rdf:'Alt',          rdfs:subClassOf,    rdfs:'Container')).
-axiom(rdfs, rdf(rdf:'Bag',          rdfs:subClassOf,    rdfs:'Container')).
-axiom(rdfs, rdf(rdf:'Seq',          rdfs:subClassOf,    rdfs:'Container')).
-axiom(rdfs, rdf(rdfs:'ContainerMembershipProperty', rdfs:subClassOf, rdf:'Property')).
-axiom(rdfs, rdf(rdfs:isDefinedBy,   rdfs:subPropertyOf, rdfs:seeAlso    )).
-axiom(rdfs, rdf(rdfs:'Datatype',    rdfs:subClassOf,    rdfs:'Class'    )).
-axiom(rdfs, rdf(P,                  rdf:type,           rdfs:'ContainerMembershipProperty')) :-
+axiom(rdfs, tp(rdf:type,           rdfs:domain,        rdfs:'Resource' )).
+axiom(rdfs, tp(rdfs:domain,        rdfs:domain,        rdf:'Property'  )).
+axiom(rdfs, tp(rdfs:range,         rdfs:domain,        rdf:'Property'  )).
+axiom(rdfs, tp(rdfs:subPropertyOf, rdfs:domain,        rdf:'Property'  )).
+axiom(rdfs, tp(rdfs:subClassOf,    rdfs:domain,        rdfs:'Class'    )).
+axiom(rdfs, tp(rdf:subject,        rdfs:domain,        rdf:'Statement' )).
+axiom(rdfs, tp(rdf:predicate,      rdfs:domain,        rdf:'Statement' )).
+axiom(rdfs, tp(rdf:object,         rdfs:domain,        rdf:'Statement' )).
+axiom(rdfs, tp(rdfs:member,        rdfs:domain,        rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:first,          rdfs:domain,        rdf:'List'      )).
+axiom(rdfs, tp(rdf:rest,           rdfs:domain,        rdf:'List'      )).
+axiom(rdfs, tp(rdfs:seeAlso,       rdfs:domain,        rdfs:'Resource' )).
+axiom(rdfs, tp(rdfs:isDefinedBy,   rdfs:domain,        rdfs:'Resource' )).
+axiom(rdfs, tp(rdfs:comment,       rdfs:domain,        rdfs:'Resource' )).
+axiom(rdfs, tp(rdfs:label,         rdfs:domain,        rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:value,          rdfs:domain,        rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:type,           rdfs:range,         rdfs:'Class'    )).
+axiom(rdfs, tp(rdfs:domain,        rdfs:range,         rdfs:'Class'    )).
+axiom(rdfs, tp(rdfs:range,         rdfs:range,         rdfs:'Class'    )).
+axiom(rdfs, tp(rdfs:subPropertyOf, rdfs:range,         rdf:'Property'  )).
+axiom(rdfs, tp(rdfs:subClassOf,    rdfs:range,         rdfs:'Class'    )).
+axiom(rdfs, tp(rdf:subject,        rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:predicate,      rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:object,         rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdfs:member,        rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:first,          rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:rest,           rdfs:range,         rdf:'List'      )).
+axiom(rdfs, tp(rdfs:seeAlso,       rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdfs:isDefinedBy,   rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdfs:comment,       rdfs:range,         rdfs:'Literal'  )).
+axiom(rdfs, tp(rdfs:label,         rdfs:range,         rdfs:'Literal'  )).
+axiom(rdfs, tp(rdf:value,          rdfs:range,         rdfs:'Resource' )).
+axiom(rdfs, tp(rdf:'Alt',          rdfs:subClassOf,    rdfs:'Container')).
+axiom(rdfs, tp(rdf:'Bag',          rdfs:subClassOf,    rdfs:'Container')).
+axiom(rdfs, tp(rdf:'Seq',          rdfs:subClassOf,    rdfs:'Container')).
+axiom(rdfs, tp(rdfs:'ContainerMembershipProperty', rdfs:subClassOf, rdf:'Property')).
+axiom(rdfs, tp(rdfs:isDefinedBy,   rdfs:subPropertyOf, rdfs:seeAlso    )).
+axiom(rdfs, tp(rdfs:'Datatype',    rdfs:subClassOf,    rdfs:'Class'    )).
+axiom(rdfs, tp(P,                  rdf:type,           rdfs:'ContainerMembershipProperty')) :-
   when(ground(P), rdf_is_predicate(P)),
   rdf_container_membership_property(P).
-axiom(rdfs, rdf(P,                  rdfs:domain,        rdfs:'Resource' )) :-
+axiom(rdfs, tp(P,                  rdfs:domain,        rdfs:'Resource' )) :-
   when(ground(P), rdf_is_predicate(P)),
   rdf_container_membership_property(P).
-axiom(rdfs, rdf(P,                  rdfs:range,         rdfs:'Resource' )) :-
+axiom(rdfs, tp(P,                  rdfs:range,         rdfs:'Resource' )) :-
   when(ground(P), rdf_is_predicate(P)),
   rdf_container_membership_property(P).
 
@@ -151,30 +151,30 @@ recognized_datatype_iri(xsd:string).
 
 %! rule(?Rule:compound, ?Conclusion:compound, -Premises:list(compound)) is nondet.
 
-rule(B,            rdf(S,P,O),                             []) :-
+rule(db(B),       tp(S,P,O),                              []) :-
   when(ground(S), rdf_is_subject(S)),
   when(ground(P), rdf_is_predicate(P)),
   tp(B, S, P, O).
-rule(axiom(Vocab), Concl,                                  []) :-
+rule(axiom(Vocab), Concl,                                 []) :-
   axiom(Vocab, Concl).
-rule(rdf(1),       rdf(literal(lan(LTag,Lex)),rdf:type,rdf:langString), [rdf(_S,_P,literal(lang(LTag,Lex)))]) :-
+rule(rdf(1),       tp(literal(lan(LTag,Lex)),rdf:type,rdf:langString), [tp(_,_,literal(lang(LTag,Lex)))]) :-
   ground(LTag-Lex).
-rule(rdf(1),       rdf(literal(type(D,Val)),rdf:type,D),   [rdf(_S,_P,literal(type(D,Val)))]) :-
+rule(rdf(1),       tp(literal(type(D,Val)),rdf:type,D),   [tp(_,_,literal(type(D,Val)))]) :-
   ground(D-Val),
   recognized_datatype_iri(D).
-rule(rdf(2),       rdf(P,rdf:type,rdf:'Property'),         [rdf(_S,P,_O)]).
-rule(rdfs(1),      rdf(D,rdf:type,rdfs:'Datatype'),        []) :-
+rule(rdf(2),       tp(P,rdf:type,rdf:'Property'),         [tp(_,P,_)]).
+rule(rdfs(1),      tp(D,rdf:type,rdfs:'Datatype'),        []) :-
   (rdf_equal(D, rdf:langString) ; recognized_datatype_iri(D)).
-rule(rdfs(2),      rdf(I,rdf:type,C),                      [rdf(P,rdfs:domain,C),rdf(I,P,_)]).
-rule(rdfs(3),      rdf(I,rdf:type,C),                      [rdf(P,rdfs:range,C),rdf(_,P,I)]).
-rule(rdfs('4a'),   rdf(I,rdf:type,rdfs:'Resource'),        [rdf(I,_,_)]).
-rule(rdfs('4b'),   rdf(I,rdf:type,rdfs:'Resource'),        [rdf(_,_,I)]).
-rule(rdfs(5),      rdf(P, rdfs:subPropertyOf, R),          [rdf(P,rdfs:subPropertyOf,Q),rdf(Q,rdfs:subPropertyOf,R)]).
-rule(rdfs(6),      rdf(P, rdfs:subPropertyOf, P),          [rdf(P,rdf:type,rdf:'Property')]).
-rule(rdfs(7),      rdf(X,Q,Y),                             [rdf(P,rdfs:subPropertyOf,Q),rdf(X,P,Y)]).
-rule(rdfs(8),      rdf(C,rdfs:subClassOf,rdfs:'Resource'), [rdf(C,rdf:type,rdfs:'Class')]).
-rule(rdfs(9),      rdf(I,rdf:type,D),                      [rdf(C,rdfs:subClassOf,D),rdf(I,rdf:type,C)]).
-rule(rdfs(10),     rdf(C,rdfs:subClassOf,C),               [rdf(C,rdf:type,rdfs:'Class')]).
-rule(rdfs(11),     rdf(C,rdfs:subClassOf,E),               [rdf(C,rdfs:subClassOf,D),rdf(D,rdfs:subClassOf,E)]).
-rule(rdfs(12),     rdf(P,rdfs:subPropertyOf,rdfs:member),  [rdf(P,rdf:type,rdfs:'ContainerMembershipProperty')]).
-rule(rdfs(13),     rdf(C,rdfs:subClassOf,rdfs:'Literal'),  [rdf(C,rdf:type,rdfs:'Datatype')]).
+rule(rdfs(2),      tp(I,rdf:type,C),                      [tp(P,rdfs:domain,C),tp(I,P,_)]).
+rule(rdfs(3),      tp(I,rdf:type,C),                      [tp(P,rdfs:range,C),tp(_,P,I)]).
+rule(rdfs('4a'),   tp(I,rdf:type,rdfs:'Resource'),        [tp(I,_,_)]).
+rule(rdfs('4b'),   tp(I,rdf:type,rdfs:'Resource'),        [tp(_,_,I)]).
+rule(rdfs(5),      tp(P, rdfs:subPropertyOf, R),          [tp(P,rdfs:subPropertyOf,Q),tp(Q,rdfs:subPropertyOf,R)]).
+rule(rdfs(6),      tp(P, rdfs:subPropertyOf, P),          [tp(P,rdf:type,rdf:'Property')]).
+rule(rdfs(7),      tp(X,Q,Y),                             [tp(P,rdfs:subPropertyOf,Q),tp(X,P,Y)]).
+rule(rdfs(8),      tp(C,rdfs:subClassOf,rdfs:'Resource'), [tp(C,rdf:type,rdfs:'Class')]).
+rule(rdfs(9),      tp(I,rdf:type,D),                      [tp(C,rdfs:subClassOf,D),tp(I,rdf:type,C)]).
+rule(rdfs(10),     tp(C,rdfs:subClassOf,C),               [tp(C,rdf:type,rdfs:'Class')]).
+rule(rdfs(11),     tp(C,rdfs:subClassOf,E),               [tp(C,rdfs:subClassOf,D),tp(D,rdfs:subClassOf,E)]).
+rule(rdfs(12),     tp(P,rdfs:subPropertyOf,rdfs:member),  [tp(P,rdf:type,rdfs:'ContainerMembershipProperty')]).
+rule(rdfs(13),     tp(C,rdfs:subClassOf,rdfs:'Literal'),  [tp(C,rdf:type,rdfs:'Datatype')]).
