@@ -3,69 +3,88 @@
   rdf_backward,
   [
     rdf_proof/1, % ?Conclusion
-    rdf_proof/2, % ?Conclusion, -Proof
-    rdf_prove/1  % ?Conclusion
+    rdf_proof/2, % +Dataset, ?Conclusion
+    rdf_proof/3, % +Dataset, ?Conclusion, -Proof
+    rdf_prove/1, % ?Conclusion
+    rdf_prove/2  % +Dataset, ?Conclusion
   ]
 ).
+:- reexport(library(rdf_api)).
 
 /** <module> RDF(S) entailment through mode-directed tabling
 
-@author Wouter Beek
-@version 2018-2019
 */
 
 :- use_module(library(apply)).
-:- use_module(library(lists)).
 :- use_module(library(solution_sequences)).
 :- use_module(library(when)).
 
-:- use_module(library(proof)).
-:- use_module(library(semweb/rdf_api)).
-:- use_module(library(semweb/rdf_mem)).
-:- use_module(library(semweb/rdf_prefix)).
-:- use_module(library(semweb/rdf_proof)).
-:- use_module(library(semweb/rdf_term)).
+:- use_module(library(proof)). % Used in lattice/1.
+:- use_module(library(rdf_prefix)).
+:- use_module(library(rdf_proof)).
+:- use_module(library(rdf_term)).
+
+:- dynamic
+    recognized_datatype_iri/1.
 
 :- rdf_meta
    axiom(?, t),
    rdf_proof(t),
-   rdf_proof(t, -),
+   rdf_proof(+, t),
+   rdf_proof(+, t, -),
    rdf_prove(t),
+   rdf_prove(+, t),
    recognized_datatype_iri(r),
-   rule(?, t, t).
+   rule(+, ?, t, t).
 
 :- table
-   rdf_proof(_,lattice(shortest_proof)).
+   rdf_proof(_,_,lattice(shortest_proof)).
 
 
 
 
 
-%! rdf_prove(++Conclusion:compound) is semidet.
-%! rdf_prove(+Conclusion:compound) is nondet.
 %! rdf_proof(++Conclusion:compound) is semidet.
 %! rdf_proof(+Conclusion:compound) is nondet.
 %! rdf_proof(-Conclusion:compound) is multi.
 
 rdf_proof(Concl) :-
-  rdf_proof(Concl, Proof),
+  create_dataset([], [], Dataset),
+  rdf_proof(Dataset, Concl).
+
+
+%! rdf_proof(+Dataset:compound, ++Conclusion:compound) is semidet.
+%! rdf_proof(+Dataset:compound, +Conclusion:compound) is nondet.
+%! rdf_proof(+Dataset:compound, -Conclusion:compound) is multi.
+
+rdf_proof(Dataset, Concl) :-
+  rdf_proof(Dataset, Concl, Proof),
   rdf_view_proof(Proof).
 
 
-%! rdf_proof(++Conclusion:compound, -Proof:compound) is semidet.
-%! rdf_proof(+Conclusion:compound, -Proof:compound) is nondet.
-%! rdf_proof(-Conclusion:compound, -Proof:compound) is multi.
+%! rdf_proof(+Dataset:compound, ++Conclusion:compound, -Proof:compound) is semidet.
+%! rdf_proof(+Dataset:compound, +Conclusion:compound, -Proof:compound) is nondet.
+%! rdf_proof(+Dataset:compound, -Conclusion:compound, -Proof:compound) is multi.
 
-rdf_proof(Concl, t(Rule,Concl,Proofs)) :-
-  rule(Rule, Concl, Prems),
-  maplist(rdf_proof, Prems, Proofs).
+rdf_proof(Dataset, Concl, p(Rule,Concl,Proofs)) :-
+  rule(Dataset, Rule, Concl, Prems),
+  maplist(rdf_proof(Dataset), Prems, Proofs).
 
 
 
-%! rdf_prove(-Conclusion:compound) is multi.
+%! rdf_prove(++Conclusion:compound) is semidet.
+%! rdf_prove(+Conclusion:compound) is nondet.
 
 rdf_prove(Concl) :-
-  distinct(Concl, rdf_proof(Concl, _)).
+  create_dataset([], [], Dataset),
+  rdf_prove(Dataset, Concl).
+
+
+%! rdf_prove(+Dataset:compound, ++Conclusion:compound) is semidet.
+%! rdf_prove(+Dataset:compound, +Conclusion:compound) is nondet.
+
+rdf_prove(Dataset, Concl) :-
+  distinct(Concl, rdf_proof(Dataset, Concl, _)).
 
 
 
@@ -149,32 +168,35 @@ recognized_datatype_iri(xsd:string).
 
 
 
-%! rule(?Rule:compound, ?Conclusion:compound, -Premises:list(compound)) is nondet.
+%! rule(+Dataset:compound,
+%!      ?Rule:compound,
+%!      ?Conclusion:compound,
+%!      -Premises:list(compound)) is nondet.
 
-rule(db(B),       tp(S,P,O),                              []) :-
+rule(Dataset, db, tp(S,P,O), []) :-
   when(ground(S), rdf_is_subject(S)),
   when(ground(P), rdf_is_predicate(P)),
-  tp(B, S, P, O).
-rule(axiom(Vocab), Concl,                                 []) :-
+  tp(S, P, O, Dataset).
+rule(_, axiom(Vocab), Concl, []) :-
   axiom(Vocab, Concl).
-rule(rdf(1),       tp(literal(lan(LTag,Lex)),rdf:type,rdf:langString), [tp(_,_,literal(lang(LTag,Lex)))]) :-
+rule(_, rdf(1),     tp(literal(lang(LTag,Lex)),rdf:type,rdf:langString), [tp(_,_,literal(lang(LTag,Lex)))]) :-
   ground(LTag-Lex).
-rule(rdf(1),       tp(literal(type(D,Val)),rdf:type,D),   [tp(_,_,literal(type(D,Val)))]) :-
+rule(_, rdf(1),     tp(literal(type(D,Val)),rdf:type,D),   [tp(_,_,literal(type(D,Val)))]) :-
   ground(D-Val),
   recognized_datatype_iri(D).
-rule(rdf(2),       tp(P,rdf:type,rdf:'Property'),         [tp(_,P,_)]).
-rule(rdfs(1),      tp(D,rdf:type,rdfs:'Datatype'),        []) :-
+rule(_, rdf(2),     tp(P,rdf:type,rdf:'Property'),         [tp(_,P,_)]).
+rule(_, rdfs(1),    tp(D,rdf:type,rdfs:'Datatype'),        []) :-
   (rdf_equal(D, rdf:langString) ; recognized_datatype_iri(D)).
-rule(rdfs(2),      tp(I,rdf:type,C),                      [tp(P,rdfs:domain,C),tp(I,P,_)]).
-rule(rdfs(3),      tp(I,rdf:type,C),                      [tp(P,rdfs:range,C),tp(_,P,I)]).
-rule(rdfs('4a'),   tp(I,rdf:type,rdfs:'Resource'),        [tp(I,_,_)]).
-rule(rdfs('4b'),   tp(I,rdf:type,rdfs:'Resource'),        [tp(_,_,I)]).
-rule(rdfs(5),      tp(P, rdfs:subPropertyOf, R),          [tp(P,rdfs:subPropertyOf,Q),tp(Q,rdfs:subPropertyOf,R)]).
-rule(rdfs(6),      tp(P, rdfs:subPropertyOf, P),          [tp(P,rdf:type,rdf:'Property')]).
-rule(rdfs(7),      tp(X,Q,Y),                             [tp(P,rdfs:subPropertyOf,Q),tp(X,P,Y)]).
-rule(rdfs(8),      tp(C,rdfs:subClassOf,rdfs:'Resource'), [tp(C,rdf:type,rdfs:'Class')]).
-rule(rdfs(9),      tp(I,rdf:type,D),                      [tp(C,rdfs:subClassOf,D),tp(I,rdf:type,C)]).
-rule(rdfs(10),     tp(C,rdfs:subClassOf,C),               [tp(C,rdf:type,rdfs:'Class')]).
-rule(rdfs(11),     tp(C,rdfs:subClassOf,E),               [tp(C,rdfs:subClassOf,D),tp(D,rdfs:subClassOf,E)]).
-rule(rdfs(12),     tp(P,rdfs:subPropertyOf,rdfs:member),  [tp(P,rdf:type,rdfs:'ContainerMembershipProperty')]).
-rule(rdfs(13),     tp(C,rdfs:subClassOf,rdfs:'Literal'),  [tp(C,rdf:type,rdfs:'Datatype')]).
+rule(_, rdfs(2),    tp(I,rdf:type,C),                      [tp(P,rdfs:domain,C),tp(I,P,_)]).
+rule(_, rdfs(3),    tp(I,rdf:type,C),                      [tp(P,rdfs:range,C),tp(_,P,I)]).
+rule(_, rdfs('4a'), tp(I,rdf:type,rdfs:'Resource'),        [tp(I,_,_)]).
+rule(_, rdfs('4b'), tp(I,rdf:type,rdfs:'Resource'),        [tp(_,_,I)]).
+rule(_, rdfs(5),    tp(P, rdfs:subPropertyOf, R),          [tp(P,rdfs:subPropertyOf,Q),tp(Q,rdfs:subPropertyOf,R)]).
+rule(_, rdfs(6),    tp(P, rdfs:subPropertyOf, P),          [tp(P,rdf:type,rdf:'Property')]).
+rule(_, rdfs(7),    tp(X,Q,Y),                             [tp(P,rdfs:subPropertyOf,Q),tp(X,P,Y)]).
+rule(_, rdfs(8),    tp(C,rdfs:subClassOf,rdfs:'Resource'), [tp(C,rdf:type,rdfs:'Class')]).
+rule(_, rdfs(9),    tp(I,rdf:type,D),                      [tp(C,rdfs:subClassOf,D),tp(I,rdf:type,C)]).
+rule(_, rdfs(10),   tp(C,rdfs:subClassOf,C),               [tp(C,rdf:type,rdfs:'Class')]).
+rule(_, rdfs(11),   tp(C,rdfs:subClassOf,E),               [tp(C,rdfs:subClassOf,D),tp(D,rdfs:subClassOf,E)]).
+rule(_, rdfs(12),   tp(P,rdfs:subPropertyOf,rdfs:member),  [tp(P,rdf:type,rdfs:'ContainerMembershipProperty')]).
+rule(_, rdfs(13),   tp(C,rdfs:subClassOf,rdfs:'Literal'),  [tp(C,rdf:type,rdfs:'Datatype')]).

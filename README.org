@@ -412,7 +412,6 @@ rdf:rest a rdf:Property.
 rdf:value a rdf:Property.
 rdf:nil a rdf:List.
 rdf:_1 a rdf:Property.
-rdf:_2 a rdf:Property.
 …
 #+end_src
 
