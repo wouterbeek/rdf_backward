@@ -28,9 +28,10 @@ just want to say hi.
 
   1. Install [[http://www.swi-prolog.org][SWI-Prolog]].
 
-  2. Install [[https://github.com/wouterbeek/prolog_rdf][prolog_rdf]] and its dependencies.
+  2. Install [[https://github.com/wouterbeek/prolog_rdf][prolog_rdf]] and [[https://github.com/wouterbeek/prolog_graphviz][prolog_graphviz]], and their dependencies.
 
-  3. Add the following lines to your ~.swiplrc~ file:
+  3. Clone this repo, and add the following line to your
+     ~$HOME/.config/swi-prolog/init.pl~ file:
 
      #+begin_src prolog
      user:file_search_path(library, '/your/path/to/rdf_backward/prolog').
@@ -38,7 +39,7 @@ just want to say hi.
 
 * Using the library
 
-Prior to use, the following module must be imported:
+You can now load the lbraries from this repo in the following way:
 
 #+begin_src prolog
 ?- [library(semweb/rdf_backward)].

@@ -9,20 +9,21 @@
     rdf_prove/2  % +Dataset, ?Conclusion
   ]
 ).
-:- reexport(library(rdf_api)).
 
 /** <module> RDF(S) entailment through mode-directed tabling
 
 */
 
 :- use_module(library(apply)).
+:- use_module(library(error)).
+:- use_module(library(semweb/rdf11)).
 :- use_module(library(solution_sequences)).
 :- use_module(library(when)).
+:- use_module(library(yall)).
 
-:- use_module(library(proof)). % Used in lattice/1.
-:- use_module(library(rdf_prefix)).
-:- use_module(library(rdf_proof)).
-:- use_module(library(rdf_term)).
+:- use_module(library(semweb/rdf_api)).
+:- use_module(library(semweb/rdf_proof)).
+:- use_module(library(tree)). % Used in lattice/1.
 
 :- dynamic
     recognized_datatype_iri/1.
@@ -37,58 +38,60 @@
    recognized_datatype_iri(r),
    rule(+, ?, t, t).
 
+shortest_proof(Proof1, Proof2, Shortest) :-
+  maplist(must_be(tree), [Proof1,Proof2]),
+  shortest([Proof1,Proof2], Shortest).
+
 :- table
    rdf_proof(_,_,lattice(shortest_proof)).
 
 
 
-
-
-%! rdf_proof(++Conclusion:compound) is semidet.
-%! rdf_proof(+Conclusion:compound) is nondet.
-%! rdf_proof(-Conclusion:compound) is multi.
+%! rdf_proof(++Conclusion:rdf_triple_pattern) is semidet.
+%! rdf_proof(+Conclusion:rdf_triple_pattern) is nondet.
+%! rdf_proof(-Conclusion:rdf_triple_pattern) is multi.
 
 rdf_proof(Concl) :-
-  create_dataset([], [], Dataset),
+  rdf_dataset_create(default, [], Dataset),
   rdf_proof(Dataset, Concl).
 
 
-%! rdf_proof(+Dataset:compound, ++Conclusion:compound) is semidet.
-%! rdf_proof(+Dataset:compound, +Conclusion:compound) is nondet.
-%! rdf_proof(+Dataset:compound, -Conclusion:compound) is multi.
+%! rdf_proof(+Dataset:rdf_dataset, ++Conclusion:rdf_triple_pattern) is semidet.
+%! rdf_proof(+Dataset:rdf_dataset, +Conclusion:rdf_triple_pattern) is nondet.
+%! rdf_proof(+Dataset:rdf_dataset, -Conclusion:rdf_triple_pattern) is multi.
 
 rdf_proof(Dataset, Concl) :-
   rdf_proof(Dataset, Concl, Proof),
   rdf_view_proof(Proof).
 
 
-%! rdf_proof(+Dataset:compound, ++Conclusion:compound, -Proof:compound) is semidet.
-%! rdf_proof(+Dataset:compound, +Conclusion:compound, -Proof:compound) is nondet.
-%! rdf_proof(+Dataset:compound, -Conclusion:compound, -Proof:compound) is multi.
+%! rdf_proof(+Dataset:rdf_dataset, ++Conclusion:rdf_triple_pattern, -Proof:tree) is semidet.
+%! rdf_proof(+Dataset:rdf_dataset, +Conclusion:rdf_triple_pattern, -Proof:tree) is nondet.
+%! rdf_proof(+Dataset:rdf_dataset, -Conclusion:rdf_triple_pattern, -Proof:tree) is multi.
 
-rdf_proof(Dataset, Concl, p(Rule,Concl,Proofs)) :-
+rdf_proof(Dataset, Concl, tree(Rule,Concl,Proofs)) :-
   rule(Dataset, Rule, Concl, Prems),
   maplist(rdf_proof(Dataset), Prems, Proofs).
 
 
 
-%! rdf_prove(++Conclusion:compound) is semidet.
-%! rdf_prove(+Conclusion:compound) is nondet.
+%! rdf_prove(++Conclusion:rdf_triple_pattern) is semidet.
+%! rdf_prove(+Conclusion:rdf_triple_pattern) is nondet.
 
 rdf_prove(Concl) :-
-  create_dataset([], [], Dataset),
+  rdf_dataset_create(default, [], Dataset),
   rdf_prove(Dataset, Concl).
 
 
-%! rdf_prove(+Dataset:compound, ++Conclusion:compound) is semidet.
-%! rdf_prove(+Dataset:compound, +Conclusion:compound) is nondet.
+%! rdf_prove(+Dataset:rdf_dataset, ++Conclusion:rdf_triple_pattern) is semidet.
+%! rdf_prove(+Dataset:rdf_dataset, +Conclusion:rdf_triple_pattern) is nondet.
 
 rdf_prove(Dataset, Concl) :-
   distinct(Concl, rdf_proof(Dataset, Concl, _)).
 
 
 
-%! axiom(?Vocab:term, ?Triple:compound) is nondet.
+%! axiom(?Vocab:any, ?Triple:rdf_triple_pattern) is nondet.
 
 axiom(rdf,  tp(rdf:type,           rdf:type,           rdf:'Property'  )).
 axiom(rdf,  tp(rdf:subject,        rdf:type,           rdf:'Property'  )).
@@ -168,23 +171,23 @@ recognized_datatype_iri(xsd:string).
 
 
 
-%! rule(+Dataset:compound,
-%!      ?Rule:compound,
-%!      ?Conclusion:compound,
-%!      -Premises:list(compound)) is nondet.
+%! rule(+Dataset:rdf_dataset,
+%!      ?Rule:any,
+%!      ?Conclusion:rdf_triple_pattern,
+%!      -Premises:list(rdf_triple_pattern)) is nondet.
 
 rule(Dataset, db, tp(S,P,O), []) :-
   when(ground(S), rdf_is_subject(S)),
   when(ground(P), rdf_is_predicate(P)),
-  tp(S, P, O, Dataset).
+  rdf_triple_pattern(Dataset, tp(S,P,O)).
 rule(_, axiom(Vocab), Concl, []) :-
   axiom(Vocab, Concl).
-rule(_, rdf(1),     tp(literal(lang(LTag,Lex)),rdf:type,rdf:langString), [tp(_,_,literal(lang(LTag,Lex)))]) :-
+rule(_, tp(1),     tp(literal(lang(LTag,Lex)),rdf:type,rdf:langString), [tp(_,_,literal(lang(LTag,Lex)))]) :-
   ground(LTag-Lex).
-rule(_, rdf(1),     tp(literal(type(D,Val)),rdf:type,D),   [tp(_,_,literal(type(D,Val)))]) :-
+rule(_, tp(1),     tp(literal(type(D,Val)),rdf:type,D),   [tp(_,_,literal(type(D,Val)))]) :-
   ground(D-Val),
   recognized_datatype_iri(D).
-rule(_, rdf(2),     tp(P,rdf:type,rdf:'Property'),         [tp(_,P,_)]).
+rule(_, tp(2),     tp(P,rdf:type,rdf:'Property'),         [tp(_,P,_)]).
 rule(_, rdfs(1),    tp(D,rdf:type,rdfs:'Datatype'),        []) :-
   (rdf_equal(D, rdf:langString) ; recognized_datatype_iri(D)).
 rule(_, rdfs(2),    tp(I,rdf:type,C),                      [tp(P,rdfs:domain,C),tp(I,P,_)]).
