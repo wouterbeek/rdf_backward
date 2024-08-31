@@ -436,23 +436,11 @@ container membership properties, so a reasoner only needs to assert a
 limited set of container membership property axioms upon
 initialization.
 
-***** Implementation
-
-The initialization of RDF container membership properties is
-implemented by asserting clauses for the dynamic Prolog predicate
-~axiom/2~.
-
-Firstly, ~rdf_container_membership_property/1~ enumerates the RDF
-container membership properties currently present in the RDF database.
-
-Secondly, ~add_axiom/2~ is a simple wrapper that only calls
-~assertz/1~ in case the axiom does not already exist.
+The number of container membership axioms can be configured with the
+following setting:
 
 #+begin_src prolog
-forall(
-  rdf_container_membership_property(P),
-  add_axiom(rdf, rdf(P,rdf:type,rdf:'Property'))
-).
+?- set_setting(rdf_container_membership_property_max, 10).
 #+end_src
 
 *** Rules
@@ -533,9 +521,18 @@ rdfs:isDefinedBy rdfs:subPropertyOf rdfs:seeAlso.
 
 rdfs:Datatype rdfs:subClassOf rdfs:Class.
 
-rdf:_1 a rdfs:ContainerMembershipProperty.
-rdf:_1 rdfs:domain rdfs:Resource.
-rdf:_1 rdfs:range rdfs:Resource.
+rdf:_1
+  a rdfs:ContainerMembershipProperty;
+  rdfs:domain rdfs:Resource;
+  rdfs:range rdfs:Resource.
+rdf:_2
+  a rdfs:ContainerMembershipProperty;
+  rdfs:domain rdfs:Resource;
+  rdfs:range rdfs:Resource.
+rdf:_3
+  a rdfs:ContainerMembershipProperty;
+  rdfs:domain rdfs:Resource;
+  rdfs:range rdfs:Resource.
 …
 #+end_src
 
