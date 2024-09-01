@@ -2,12 +2,11 @@
 :- module(
   rdf_backward,
   [
-    rdf_assert_recognized_datatype_iri/1, % +Datatype
-    rdf_proof/1,                          % ?Conclusion
-    rdf_proof/2,                          % +Dataset, ?Conclusion
-    rdf_proof/3,                          % +Dataset, ?Conclusion, -Proof
-    rdf_prove/1,                          % ?Conclusion
-    rdf_prove/2                           % +Dataset, ?Conclusion
+    rdf_proof/1, % ?Conclusion
+    rdf_proof/2, % +Dataset, ?Conclusion
+    rdf_proof/3, % +Dataset, ?Conclusion, -Proof
+    rdf_prove/1, % ?Conclusion
+    rdf_prove/2  % +Dataset, ?Conclusion
   ]
 ).
 
@@ -20,52 +19,37 @@
 :- use_module(library(semweb/rdf11)).
 :- use_module(library(solution_sequences)).
 :- use_module(library(when)).
-:- use_module(library(yall)).
 
 :- use_module(library(semweb/rdf_api)).
 :- use_module(library(semweb/rdf_proof)).
 :- use_module(library(tree)). % Used in lattice/1.
 
 :- dynamic
-   rdf_recognized_datatype_iri_/1.
-
-:- initialization
-   init_.
+   recognized_datatype_iri_/1.
 
 :- rdf_meta
    axiom_(?, t),
-   rdf_assert_recognized_datatype_iri(r),
    rdf_proof(t),
    rdf_proof(+, t),
    rdf_proof(+, t, -),
    rdf_prove(t),
    rdf_prove(+, t),
+   recognized_datatype_iri_(r),
    rule_(+, ?, t, t).
 
-shortest_proof(Proof1, Proof2, Shortest) :-
-  maplist(must_be(tree), [Proof1,Proof2]),
-  shortest([Proof1,Proof2], Shortest).
-
-:- table
-   rdf_proof(_,_,lattice(shortest_proof)).
-
-
-
-%! rdf_assert_recognized_datatype_iri(+Datatype:iri) is semidet.
-%
-% Extend the datatype IRIs that are recognized by this reasoner.
-%
-% Datatype IRI `rdf:langString' is recognized, but is not asserted,
-% since language-tagged strings are implemented by a different Prolog
-% syntax.
-%
 % By default, the set of recognized datatype IRIs includes only
 % `rdf:langString' and `xsd:string'.  This set can be extended by
 % asserting Prolog terms of the form `recognized_datatype_iri(+atom)'.
 
-:- det(rdf_assert_recognized_datatype_iri/1).
-rdf_assert_recognized_datatype_iri(Datatype) :-
-  assert(rdf_recognized_datatype_iri_(Datatype)).
+recognized_datatype_iri_(rdf:langString).
+recognized_datatype_iri_(xsd:string).
+
+shortest_proof_(Proof1, Proof2, Shortest) :-
+  maplist(must_be(tree), [Proof1,Proof2]),
+  shortest([Proof1,Proof2], Shortest).
+
+:- table
+   rdf_proof(_,_,lattice(shortest_proof_)).
 
 
 
@@ -195,10 +179,10 @@ rule_(_, tp(1),      tp(literal(lang(LTag,Lex)),rdf:type,rdf:langString), [tp(_,
   ground(LTag-Lex).
 rule_(_, tp(1),      tp(literal(type(D,Val)),rdf:type,D),   [tp(_,_,literal(type(D,Val)))]) :-
   ground(D-Val),
-  rdf_recognized_datatype_iri_(D).
+  recognized_datatype_iri_(D).
 rule_(_, tp(2),      tp(P,rdf:type,rdf:'Property'),         [tp(_,P,_)]).
 rule_(_, rdfs(1),    tp(D,rdf:type,rdfs:'Datatype'),        []) :-
-  (rdf_equal(D, rdf:langString) ; rdf_recognized_datatype_iri_(D)).
+  recognized_datatype_iri_(D).
 rule_(_, rdfs(2),    tp(I,rdf:type,C),                      [tp(P,rdfs:domain,C),tp(I,P,_)]).
 rule_(_, rdfs(3),    tp(I,rdf:type,C),                      [tp(P,rdfs:range,C),tp(_,P,I)]).
 rule_(_, rdfs('4a'), tp(I,rdf:type,rdfs:'Resource'),        [tp(I,_,_)]).
@@ -212,12 +196,3 @@ rule_(_, rdfs(10),   tp(C,rdfs:subClassOf,C),               [tp(C,rdf:type,rdfs:
 rule_(_, rdfs(11),   tp(C,rdfs:subClassOf,E),               [tp(C,rdfs:subClassOf,D),tp(D,rdfs:subClassOf,E)]).
 rule_(_, rdfs(12),   tp(P,rdfs:subPropertyOf,rdfs:member),  [tp(P,rdf:type,rdfs:'ContainerMembershipProperty')]).
 rule_(_, rdfs(13),   tp(C,rdfs:subClassOf,rdfs:'Literal'),  [tp(C,rdf:type,rdfs:'Datatype')]).
-
-
-
-% INITIALIZATION %
-
-:- det(init_/0).
-init_ :-
-  rdf_assert_recognized_datatype_iri(rdf:langString),
-  rdf_assert_recognized_datatype_iri(xsd:string).
