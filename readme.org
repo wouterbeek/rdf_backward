@@ -553,8 +553,8 @@ Other datatype IRI must first be asserted in the following way:
 ?- rdf_db:rdf_equal(xsd:date, D), assert(rdf_backward:recognized_datatype_iri_(D)).
 #+end_src
 
-Notice that ~rdf_db:rdf_equal/2~ is used, because ~assert/1~ does not
-apply prefix expansion on its arguments.
+Notice that ~rdf_db:rdf_equal/2~ is used here, because ~assert/1~ does
+not apply prefix expansion on its arguments.
 
 The currently recognized datatype IRIs can be retrieved with the
 following query:

@@ -183,16 +183,50 @@ rule_(_, tp(1),      tp(literal(type(D,Val)),rdf:type,D),   [tp(_,_,literal(type
 rule_(_, tp(2),      tp(P,rdf:type,rdf:'Property'),         [tp(_,P,_)]).
 rule_(_, rdfs(1),    tp(D,rdf:type,rdfs:'Datatype'),        []) :-
   recognized_datatype_iri_(D).
-rule_(_, rdfs(2),    tp(I,rdf:type,C),                      [tp(P,rdfs:domain,C),tp(I,P,_)]).
-rule_(_, rdfs(3),    tp(I,rdf:type,C),                      [tp(P,rdfs:range,C),tp(_,P,I)]).
+rule_(_, rdfs(2),    tp(I,rdf:type,C),                      [tp(P,rdfs:domain,C),
+							     tp(I,P,_)]).
+rule_(_, rdfs(3),    tp(I,rdf:type,C),                      [tp(P,rdfs:range,C),
+							     tp(_,P,I)]).
 rule_(_, rdfs('4a'), tp(I,rdf:type,rdfs:'Resource'),        [tp(I,_,_)]).
 rule_(_, rdfs('4b'), tp(I,rdf:type,rdfs:'Resource'),        [tp(_,_,I)]).
-rule_(_, rdfs(5),    tp(P, rdfs:subPropertyOf, R),          [tp(P,rdfs:subPropertyOf,Q),tp(Q,rdfs:subPropertyOf,R)]).
+rule_(_, rdfs(5),    tp(P, rdfs:subPropertyOf, R),          [tp(P,rdfs:subPropertyOf,Q),
+							     tp(Q,rdfs:subPropertyOf,R)]).
 rule_(_, rdfs(6),    tp(P, rdfs:subPropertyOf, P),          [tp(P,rdf:type,rdf:'Property')]).
-rule_(_, rdfs(7),    tp(X,Q,Y),                             [tp(P,rdfs:subPropertyOf,Q),tp(X,P,Y)]).
+rule_(_, rdfs(7),    tp(X,Q,Y),                             [tp(P,rdfs:subPropertyOf,Q),
+							     tp(X,P,Y)]).
 rule_(_, rdfs(8),    tp(C,rdfs:subClassOf,rdfs:'Resource'), [tp(C,rdf:type,rdfs:'Class')]).
-rule_(_, rdfs(9),    tp(I,rdf:type,D),                      [tp(C,rdfs:subClassOf,D),tp(I,rdf:type,C)]).
+rule_(_, rdfs(9),    tp(I,rdf:type,D),                      [tp(C,rdfs:subClassOf,D),
+							     tp(I,rdf:type,C)]).
 rule_(_, rdfs(10),   tp(C,rdfs:subClassOf,C),               [tp(C,rdf:type,rdfs:'Class')]).
-rule_(_, rdfs(11),   tp(C,rdfs:subClassOf,E),               [tp(C,rdfs:subClassOf,D),tp(D,rdfs:subClassOf,E)]).
+rule_(_, rdfs(11),   tp(C,rdfs:subClassOf,E),               [tp(C,rdfs:subClassOf,D),
+							     tp(D,rdfs:subClassOf,E)]).
 rule_(_, rdfs(12),   tp(P,rdfs:subPropertyOf,rdfs:member),  [tp(P,rdf:type,rdfs:'ContainerMembershipProperty')]).
 rule_(_, rdfs(13),   tp(C,rdfs:subClassOf,rdfs:'Literal'),  [tp(C,rdf:type,rdfs:'Datatype')]).
+
+
+
+% TESTS %
+
+:- begin_tests(rdf_backward_tests).
+
+term_expansion((test(Name, Options1) :- Body),
+	       (test(Name, Options2) :- Body)) :-
+  rdf_global_term(Options1, Options2).
+
+test(recognized_datatype_iri_1, set(Datatype == [rdf:langString,xsd:string])) :-
+  recognized_datatype_iri_(Datatype).
+test(recognized_datatype_iri_2, set(Datatype == [rdf:langString,xsd:string])) :-
+  rdf_prove(tp(Datatype,rdf:type,rdfs:'Datatype')).
+test(recognized_datatype_iri_3, [setup(assert(rdf_backward:recognized_datatype_iri_(xsd:date))),
+				 set(Datatype == [rdf:langString,xsd:date,xsd:string]),
+				 cleanup(retract(rdf_backward:recognized_datatype_iri_(xsd:date)))]) :-
+  recognized_datatype_iri_(Datatype).
+test(recognized_datatype_iri_4, [setup(assert(rdf_backward:recognized_datatype_iri_(xsd:date))),
+				 set(Datatype == [rdf:langString,xsd:date,xsd:string]),
+				 cleanup(retract(rdf_backward:recognized_datatype_iri_(xsd:date)))]) :-
+  rdf_prove(tp(Datatype,rdf:type,rdfs:'Datatype')).
+
+test(ground) :-
+  rdf_prove(tp(rdfs:'Class',rdf:type,rdfs:'Class')).
+
+:- end_tests(rdf_backward_tests).
